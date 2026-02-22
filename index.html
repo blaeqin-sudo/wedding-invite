@@ -137,6 +137,16 @@
             transform: scale(0.98);
         }
 
+        /* Replaced alert() with a clean inline error message */
+        .error-msg {
+            color: #dc3545;
+            font-size: 0.85rem;
+            text-align: center;
+            margin-bottom: 15px;
+            font-weight: 600;
+            display: none;
+        }
+
         .result-section {
             margin-top: 30px;
             padding-top: 25px;
@@ -255,6 +265,8 @@
                 <input type="text" id="cityInput" placeholder="e.g. Katni, Madhya Pradesh" required>
             </div>
 
+            <div id="errorMsg" class="error-msg">Please fill in all the details to generate the link.</div>
+
             <button class="btn-primary" id="generateBtn">Generate Invite Link</button>
         </div>
 
@@ -273,8 +285,12 @@
             const copyBtn = document.getElementById('copyBtn');
             const resultSection = document.getElementById('resultSection');
             const generatedUrlInput = document.getElementById('generatedUrl');
+            const errorMsg = document.getElementById('errorMsg');
 
             generateBtn.addEventListener('click', () => {
+                // Hide error message initially
+                errorMsg.style.display = 'none';
+
                 // Get values
                 const groom = document.getElementById('groomInput').value.trim();
                 const bride = document.getElementById('brideInput').value.trim();
@@ -284,26 +300,40 @@
 
                 // Basic validation
                 if (!groom || !bride || !date || !venue || !city) {
-                    alert("Please fill in all the details to generate the link.");
+                    errorMsg.style.display = 'block';
                     return;
                 }
 
-                // Get base URL for the invitation page
-                // Assuming the main invitation file is named "index.html" and lives in the same directory
-                const currentPath = window.location.href;
-                const basePath = currentPath.substring(0, currentPath.lastIndexOf('/'));
-                const inviteFileName = 'Invite.html'; // Target file
-                
-                // Construct URL with encoded parameters
-                const params = new URLSearchParams();
-                params.append('groom', groom);
-                params.append('bride', bride);
-                params.append('date', date);
-                params.append('venue', venue);
-                params.append('city', city);
+                // 1. Create a name slug (stripping spaces to ensure clean URLs)
+                const cleanGroom = groom.toLowerCase().replace(/\s+/g, '');
+                const cleanBride = bride.toLowerCase().replace(/\s+/g, '');
+                const nameSlug = `${cleanGroom}-${cleanBride}`;
 
-                // Build the final full URL
-                const finalUrl = `${basePath}/${inviteFileName}?${params.toString()}`;
+                // 2. Generate random ID
+                const uniqueId = Math.random().toString(36).substring(2,10);
+
+                // 3. Create data object
+                const dataObj = {
+                    groom,
+                    bride,
+                    date,
+                    venue,
+                    city
+                };
+
+                // 4. Encode data
+                const encoded = btoa(JSON.stringify(dataObj));
+
+                // 5. Store encoded data in localStorage
+                localStorage.setItem("wi_" + uniqueId, encoded);
+
+                // Get base URL (Removing query parameters or hashes from current URL)
+                const currentPath = window.location.href.split('?')[0].split('#')[0];
+                const basePath = currentPath.substring(0, currentPath.lastIndexOf('/'));
+                const inviteFileName = 'Invite.html'; 
+                
+                // 6. Generate final URL with Hash
+                const finalUrl = `${basePath}/${inviteFileName}#wi-${nameSlug}-${uniqueId}`;
 
                 // Show result
                 generatedUrlInput.value = finalUrl;
@@ -315,7 +345,7 @@
             });
 
             copyBtn.addEventListener('click', () => {
-                // Use fallback for document.execCommand in environments where clipboard API might be restricted (like iframes)
+                // Use fallback for document.execCommand in environments where clipboard API might be restricted (like iFrames)
                 generatedUrlInput.select();
                 generatedUrlInput.setSelectionRange(0, 99999); // For mobile devices
 
