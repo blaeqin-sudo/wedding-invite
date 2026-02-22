@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beautiful Wedding Invitation</title>
+    <!-- Fonts import -->
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    
+    <style>
+        /* CSS Variables */
+        :root {
+            --bg-color: #fdfbfb;
+            --bg-grad: linear-gradient(135deg, #fdfbfb 0%, #f3e6e8 100%);
+            --env-dark: #b8868b;     
+            --env-base: #EFC6C7;     
+            --env-sides: #E0B3B4;    
+            --env-top: #E5BABB;      
+            --card-bg: linear-gradient(120deg, #FFFDFB 0%, #F9F3ED 100%); 
+            --text-main: #4A3C31;    
+            --text-gold: #B38728;    
+            --seal-color: #D64550;   
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Lora', serif;
+            background: var(--bg-grad);
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden; 
+            position: relative;
+        }
+
+        /* --- Background Full Blur Overlay --- */
+        .blur-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: rgba(253, 251, 251, 0.3);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 1.5s ease 0.5s; 
+            z-index: 5;
+        }
+        .blur-overlay.active {
+            opacity: 1;
+        }
+
+        /* --- Floating Hearts --- */
+        .particle {
+            position: fixed;
+            bottom: -50px;
+            pointer-events: none;
+            background-color: #ffb3ba;
+            width: 12px; height: 12px;
+            transform: rotate(-45deg);
+            z-index: 0;
+            opacity: 0;
+        }
+        .particle::before, .particle::after {
+            content: ''; position: absolute;
+            width: 12px; height: 12px;
+            background-color: inherit;
+            border-radius: 50%;
+        }
+        .particle::before { top: -6px; left: 0; }
+        .particle::after { top: 0; left: 6px; }
+
+        @keyframes floatUp {
+            0% { transform: translateY(0) rotate(-45deg) scale(0.8); opacity: 0; }
+            10% { opacity: 0.6; }
+            90% { opacity: 0.6; }
+            100% { transform: translateY(-110vh) rotate(-45deg) scale(1.5); opacity: 0; }
+        }
+
+        /* --- Envelope Container --- */
+        .container {
+            position: relative;
+            width: 340px;
+            height: 240px;
+            perspective: 1200px;
+            z-index: 10;
+            transition: transform 1.5s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        .container.is-open {
+            transform: translateY(60px);
+        }
+
+        .envelope-wrapper {
+            position: relative;
+            width: 100%; height: 100%;
+            cursor: pointer;
+            transition: transform 0.4s ease;
+            /* Yaha se 3D intersection physics hata di gayi hai jisse glitch aata tha */
+        }
+
+        .container:not(.is-open):not(.is-closing) .envelope-wrapper:hover {
+            transform: translateY(-5px) scale(1.02);
+        }
+        .container.is-open .envelope-wrapper {
+            cursor: default;
+        }
+
+        /* Tap to Open Tooltip */
+        .tooltip {
+            position: absolute;
+            top: -45px; left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.95);
+            color: var(--text-main);
+            padding: 8px 18px; border-radius: 20px;
+            font-size: 0.9rem; letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            animation: bounce 2s infinite ease-in-out;
+            pointer-events: none; transition: opacity 0.3s;
+            z-index: 20;
+        }
+        .container.is-open .tooltip, .container.is-closing .tooltip {
+            opacity: 0;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translate(-50%, 0); }
+            50% { transform: translate(-50%, -10px); }
+        }
+
+        /* --- Envelope Parts & Envelope Blur Focus --- */
+        .env-back, .flap, .flap-left, .flap-right, .flap-bottom, .seal {
+            transition: filter 0.8s ease 0s; /* Jab band ho to turant blur hatega */
+        }
+        
+        .container.is-open .env-back,
+        .container.is-open .flap-left,
+        .container.is-open .flap-right,
+        .container.is-open .flap-bottom,
+        .container.is-open .seal {
+            filter: blur(3px);
+            transition: filter 1s ease 1.5s; /* Kholne par delay k sath blur hoga */
+        }
+
+        .env-back {
+            position: absolute; width: 100%; height: 100%;
+            background: var(--env-dark); border-radius: 4px; z-index: 1;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2), inset 0 20px 40px rgba(0,0,0,0.4);
+        }
+        .flap {
+            position: absolute; width: 100%; height: 100%; top: 0; left: 0;
+        }
+        .flap-left {
+            background: linear-gradient(to right, #E0B3B4, #EFC6C7);
+            clip-path: polygon(0 0, 50% 50%, 0 100%); z-index: 3; border-radius: 4px 0 0 4px;
+        }
+        .flap-right {
+            background: linear-gradient(to left, #E0B3B4, #EFC6C7);
+            clip-path: polygon(100% 0, 50% 50%, 100% 100%); z-index: 3; border-radius: 0 4px 4px 0;
+        }
+        .flap-bottom {
+            background: linear-gradient(to top, #EFC6C7, #E5BABB);
+            clip-path: polygon(0 100%, 50% 45%, 100% 100%); z-index: 4; border-radius: 0 0 4px 4px;
+            filter: drop-shadow(0px -4px 4px rgba(0,0,0,0.05));
+        }
+
+        /* --- GLITCH-FREE REALISTIC FLAP PHYSICS --- */
+        .flap-top {
+            background: linear-gradient(to bottom, #E5BABB, #E0B3B4);
+            clip-path: polygon(0 0, 100% 0, 50% 60%); z-index: 5;
+            transform-origin: top center; border-radius: 4px 4px 0 0;
+            filter: drop-shadow(0px 4px 4px rgba(0,0,0,0.1));
+            transform: rotateX(0deg);
+            transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .container.is-open .flap-top {
+            transform: rotateX(180deg);
+            z-index: 1; /* Piche chala gaya taaki card iske aage se nikle */
+            filter: blur(3px);
+            transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0s, z-index 0s 0.2s, filter 1s ease 1.5s;
+        }
+
+        .container.is-closing .flap-top {
+            transform: rotateX(0deg);
+            z-index: 5; /* Wapas samne aa gaya envelope cover karne */
+            /* PERFECT TIMING: Card ke jane k liye pure 2 seconds wait karega bina blink kiye */
+            transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) 2s, z-index 0s 2s, filter 0.8s ease 0s;
+        }
+
+        .seal {
+            position: absolute; top: 55%; left: 50%;
+            width: 45px; height: 45px;
+            background: var(--seal-color); border-radius: 50%; z-index: 6;
+            display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3), inset 0 2px 5px rgba(255,255,255,0.4);
+            color: #fff; font-size: 1.2rem; text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            transform: translate(-50%, -50%) scale(1) rotate(0deg);
+            opacity: 1;
+        }
+        
+        .container.is-open .seal {
+            opacity: 0;
+            transform: translate(-50%, 150%) scale(0.5) rotate(180deg); 
+            transition: transform 0.6s cubic-bezier(0.55, 0.085, 0.68, 0.53) 0s, opacity 0.4s 0s, filter 1s ease 1.5s;
+        }
+
+        .container.is-closing .seal {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1) rotate(0deg); 
+            transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) 2.2s, opacity 0.4s 2.2s, filter 0.8s ease 0s;
+        }
+
+        /* --- THE CARD (Proper Content Sizing & No Boundary Leaks) --- */
+        .letter {
+            position: absolute; 
+            bottom: 10px; 
+            left: 20px;   
+            width: 300px; 
+            height: 420px; 
+            background: var(--card-bg);
+            border-radius: 8px; z-index: 2;
+            transform-origin: bottom center;
+            transform: scale(0.5) translateY(0);
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.02); 
+            padding: 12px; 
+            text-align: center; display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            box-sizing: border-box; 
+            overflow: hidden; 
+        }
+
+        /* --- ONE-TIME SHINE EFFECT --- */
+        .shine-effect {
+            position: absolute;
+            top: 0; left: -150%;
+            width: 150%; height: 100%;
+            background: linear-gradient(105deg, transparent 20%, rgba(255, 255, 255, 0.95) 50%, transparent 80%);
+            z-index: 20;
+            pointer-events: none;
+        }
+
+        .container.is-open .shine-effect {
+            animation: shineAnim 1.5s ease-in-out 2.4s forwards; 
+        }
+
+        @keyframes shineAnim {
+            0% { left: -150%; opacity: 1;}
+            80% { left: 150%; opacity: 1;}
+            100% { left: 150%; opacity: 0; }
+        }
+
+        /* --- PERFECT TEXT BORDER & ALIGNMENT --- */
+        .letter-border {
+            border: 1px solid #E5D0A1;
+            padding: 15px 10px; 
+            width: 100%; height: 100%;
+            border-radius: 4px; display: flex; flex-direction: column;
+            justify-content: center; /* Elements center me rahenge */
+            align-items: center;
+            gap: 12px; /* Perfect spacing bina text bahar nikale */
+            position: relative;
+            background: rgba(255,255,255,0.4);
+            box-sizing: border-box;
+        }
+        .letter-border::before, .letter-border::after {
+            content: '✧'; position: absolute; color: var(--text-gold); font-size: 1.2rem;
+        }
+        .letter-border::before { top: 5px; left: 10px; }
+        .letter-border::after { bottom: 5px; right: 10px; }
+
+        /* Font sizes adjust kiye taaki proper fit ho */
+        .pre-title, .details, .venue, .names { margin: 0; line-height: 1.4; }
+        .pre-title { font-size: 0.75rem; color: var(--text-main); text-transform: uppercase; letter-spacing: 2px; }
+        .names {
+            font-family: 'Dancing Script', cursive; 
+            font-size: 2.2rem; 
+            color: var(--text-gold);
+            background: linear-gradient(to right, #bf953f, #fcf6ba, #b38728, #fbf5b7);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            line-height: 1.2;
+            filter: drop-shadow(1px 1px 1px rgba(179, 135, 40, 0.2)); 
+        }
+        .details { font-size: 0.8rem; color: var(--text-main); }
+        .divider { width: 50px; height: 1px; background: var(--text-gold); margin: 0 auto; }
+        .venue { font-size: 0.8rem; font-style: italic; color: #66564B; }
+
+        /* --- FLAWLESS PUSH/PULL PHYSICS (Front layer entry) --- */
+        .container.is-open .letter {
+            animation: pullOutReal 2s cubic-bezier(0.175, 0.885, 0.32, 1.1) forwards;
+            animation-delay: 0.6s; 
+        }
+
+        .container.is-closing .letter {
+            animation: pushInReal 2s cubic-bezier(0.175, 0.885, 0.32, 1.1) forwards;
+        }
+
+        @keyframes pullOutReal {
+            0% { transform: scale(0.5) translateY(0); z-index: 2; box-shadow: 0 0 0 rgba(0,0,0,0); }
+            40% { transform: scale(0.5) translateY(-260px) rotate(2deg); z-index: 2; } 
+            41% { transform: scale(0.5) translateY(-260px) rotate(2deg); z-index: 15; } 
+            100% { transform: scale(1) translateY(-80px) rotate(0deg); z-index: 15; box-shadow: 0 20px 40px rgba(0,0,0,0.25); }
+        }
+
+        @keyframes pushInReal {
+            0% { transform: scale(1) translateY(-80px) rotate(0deg); z-index: 15; box-shadow: 0 20px 40px rgba(0,0,0,0.25); }
+            40% { transform: scale(0.5) translateY(-260px) rotate(-2deg); z-index: 15; } 
+            /* Z-index 2 karke card naturally front se pocket me jayega */
+            41% { transform: scale(0.5) translateY(-260px) rotate(-2deg); z-index: 2; box-shadow: 0 0 0 rgba(0,0,0,0); } 
+            100% { transform: scale(0.5) translateY(0); z-index: 2; box-shadow: inset 0 0 10px rgba(0,0,0,0.02); } 
+        }
+
+        @media (max-width: 400px) {
+            .container { transform: scale(0.85) translateY(0); }
+            .container.is-open { transform: translateY(50px) scale(0.85); }
+        }
+
+        /* Close Button in English */
+        .reset-btn {
+            position: fixed; bottom: 30px;
+            background: rgba(255,255,255,0.95);
+            border: 1px solid var(--env-sides);
+            color: var(--text-main);
+            padding: 12px 28px; border-radius: 30px;
+            font-family: 'Lora', serif; font-size: 0.95rem; font-weight: 600;
+            cursor: pointer; opacity: 0; pointer-events: none;
+            transition: 0.5s; z-index: 50;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .reset-btn.visible {
+            opacity: 1; pointer-events: auto; transform: translateY(0);
+        }
+        
+        .reset-btn:hover {
+            background: #fff; transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="blur-overlay" id="blurOverlay"></div>
+
+    <div class="container" id="cardContainer">
+        <div class="envelope-wrapper" id="envelope">
+            <div class="tooltip">Tap to Open</div>
+            
+            <div class="env-back"></div>
+            
+            <div class="letter">
+                <div class="shine-effect"></div>
+                
+                <div class="letter-border">
+                    <div class="pre-title">Together with their families</div>
+                    <div class="names"><span id="groomName">Groom</span><br>&amp;<br><span id="brideName">Bride</span></div>
+                    <div class="details">joyfully invite you to share<br>in the celebration of their wedding</div>
+                    
+                    <div class="divider"></div>
+                    
+                    <div class="details">
+                        <strong><span id="weddingDate">Wedding Date</span></strong><br>
+                        At Seven O'Clock in the Evening
+                    </div>
+                    <div class="venue">
+                        <span id="venueName">Venue Name</span><br>
+                        <span id="venueCity">City, State</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flap flap-left"></div>
+            <div class="flap flap-right"></div>
+            <div class="flap flap-bottom"></div>
+            <div class="flap flap-top"></div>
+            
+            <div class="seal">❦</div>
+        </div>
+    </div>
+
+    <button class="reset-btn" id="resetBtn">Close Envelope</button>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const container = document.getElementById('cardContainer');
+            const envelope = document.getElementById('envelope');
+            const resetBtn = document.getElementById('resetBtn');
+            const blurOverlay = document.getElementById('blurOverlay');
+
+            // Open Animation
+            envelope.addEventListener('click', () => {
+                if (!container.classList.contains('is-open') && !container.classList.contains('is-closing')) {
+                    container.classList.add('is-open');
+                    blurOverlay.classList.add('active'); 
+                    
+                    setTimeout(() => {
+                        resetBtn.classList.add('visible');
+                    }, 2800); 
+                }
+            });
+
+            // Flawless Close Animation
+            resetBtn.addEventListener('click', () => {
+                resetBtn.classList.remove('visible');
+                blurOverlay.classList.remove('active');
+                
+                container.classList.remove('is-open');
+                container.classList.add('is-closing');
+
+                // Wait purely for the card and flap to settle in naturally
+                setTimeout(() => {
+                    container.classList.remove('is-closing');
+                }, 2800); 
+            });
+
+            // Floating Hearts Generator
+            function createParticle() {
+                const particle = document.createElement('div');
+                particle.classList.add('particle');
+                
+                particle.style.left = Math.random() * 100 + 'vw';
+                
+                const animationDuration = Math.random() * 5 + 5;
+                particle.style.animation = `floatUp ${animationDuration}s linear forwards`;
+                
+                const colors = ['#ffb3ba', '#ffd1d6', '#fce4e8'];
+                particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                
+                document.body.appendChild(particle);
+                
+                setTimeout(() => {
+                    particle.remove();
+                }, animationDuration * 1000);
+            }
+
+            setInterval(createParticle, 400);
+        });
+    </script>
+    
+    <!-- Dynamic Content Update Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            
+            if (params.has('groom')) {
+                document.getElementById('groomName').textContent = params.get('groom');
+            }
+            if (params.has('bride')) {
+                document.getElementById('brideName').textContent = params.get('bride');
+            }
+            if (params.has('date')) {
+                document.getElementById('weddingDate').textContent = params.get('date');
+            }
+            if (params.has('venue')) {
+                document.getElementById('venueName').textContent = params.get('venue');
+            }
+            if (params.has('city')) {
+                document.getElementById('venueCity').textContent = params.get('city');
+            }
+        });
+    </script>
+</body>
+</html>
