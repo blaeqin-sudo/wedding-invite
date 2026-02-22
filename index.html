@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wedding Invite Generator</title>
+    <!-- Fonts import for a premium look -->
+    <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #b8868b;
+            --primary-hover: #a37277;
+            --bg-color: #fdfbfb;
+            --card-bg: #ffffff;
+            --text-main: #4A3C31;
+            --text-light: #8c7b70;
+            --border-color: #e5d0a1;
+            --input-bg: #faf8f5;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: linear-gradient(135deg, #fdfbfb 0%, #f3e6e8 100%);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .generator-card {
+            background: var(--card-bg);
+            width: 100%;
+            max-width: 500px;
+            padding: 40px 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.02);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .generator-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 6px;
+            background: linear-gradient(to right, #E0B3B4, #b8868b, #E0B3B4);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-family: 'Lora', serif;
+            font-size: 1.8rem;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-main);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: var(--input-bg);
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1rem;
+            color: var(--text-main);
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .form-group input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(184, 134, 139, 0.1);
+            background-color: #fff;
+        }
+
+        .row {
+            display: flex;
+            gap: 15px;
+        }
+
+        .row .form-group {
+            flex: 1;
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--primary);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            margin-top: 10px;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+
+        .result-section {
+            margin-top: 30px;
+            padding-top: 25px;
+            border-top: 1px dashed var(--border-color);
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .result-section.active {
+            display: block;
+        }
+
+        .result-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .url-box {
+            display: flex;
+            align-items: center;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 5px;
+            gap: 10px;
+        }
+
+        .url-box input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 0.85rem;
+            color: var(--text-main);
+            outline: none;
+        }
+
+        .btn-copy {
+            background-color: #fff;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .btn-copy:hover {
+            background-color: var(--input-bg);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-copy.success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 480px) {
+            .row {
+                flex-direction: column;
+                gap: 0;
+            }
+            .generator-card {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="generator-card">
+        <div class="header">
+            <h1>Invite Generator</h1>
+            <p>Create a personalized link for your guests</p>
+        </div>
+
+        <div class="form-container">
+            <div class="row">
+                <div class="form-group">
+                    <label for="groomInput">Groom Name</label>
+                    <input type="text" id="groomInput" placeholder="e.g. Aditya" required>
+                </div>
+                <div class="form-group">
+                    <label for="brideInput">Bride Name</label>
+                    <input type="text" id="brideInput" placeholder="e.g. Ananya" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="dateInput">Wedding Date & Time</label>
+                <input type="text" id="dateInput" placeholder="e.g. Saturday, 14th February 2027" required>
+            </div>
+
+            <div class="form-group">
+                <label for="venueInput">Venue Name</label>
+                <input type="text" id="venueInput" placeholder="e.g. The Grand Regal Gardens" required>
+            </div>
+
+            <div class="form-group">
+                <label for="cityInput">City & State</label>
+                <input type="text" id="cityInput" placeholder="e.g. Katni, Madhya Pradesh" required>
+            </div>
+
+            <button class="btn-primary" id="generateBtn">Generate Invite Link</button>
+        </div>
+
+        <div class="result-section" id="resultSection">
+            <div class="result-label">Your Custom Link:</div>
+            <div class="url-box">
+                <input type="text" id="generatedUrl" readonly>
+                <button class="btn-copy" id="copyBtn">Copy</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const generateBtn = document.getElementById('generateBtn');
+            const copyBtn = document.getElementById('copyBtn');
+            const resultSection = document.getElementById('resultSection');
+            const generatedUrlInput = document.getElementById('generatedUrl');
+
+            generateBtn.addEventListener('click', () => {
+                // Get values
+                const groom = document.getElementById('groomInput').value.trim();
+                const bride = document.getElementById('brideInput').value.trim();
+                const date = document.getElementById('dateInput').value.trim();
+                const venue = document.getElementById('venueInput').value.trim();
+                const city = document.getElementById('cityInput').value.trim();
+
+                // Basic validation
+                if (!groom || !bride || !date || !venue || !city) {
+                    alert("Please fill in all the details to generate the link.");
+                    return;
+                }
+
+                // Get base URL for the invitation page
+                // Assuming the main invitation file is named "index.html" and lives in the same directory
+                const currentPath = window.location.href;
+                const basePath = currentPath.substring(0, currentPath.lastIndexOf('/'));
+                const inviteFileName = 'index.html'; // Target file
+                
+                // Construct URL with encoded parameters
+                const params = new URLSearchParams();
+                params.append('groom', groom);
+                params.append('bride', bride);
+                params.append('date', date);
+                params.append('venue', venue);
+                params.append('city', city);
+
+                // Build the final full URL
+                const finalUrl = `${basePath}/${inviteFileName}?${params.toString()}`;
+
+                // Show result
+                generatedUrlInput.value = finalUrl;
+                resultSection.classList.add('active');
+                
+                // Reset copy button if it was previously clicked
+                copyBtn.textContent = "Copy";
+                copyBtn.classList.remove("success");
+            });
+
+            copyBtn.addEventListener('click', () => {
+                // Use fallback for document.execCommand in environments where clipboard API might be restricted (like iframes)
+                generatedUrlInput.select();
+                generatedUrlInput.setSelectionRange(0, 99999); // For mobile devices
+
+                try {
+                    // Modern clipboard API
+                    navigator.clipboard.writeText(generatedUrlInput.value).then(() => {
+                        showCopySuccess();
+                    }).catch(() => {
+                        // Fallback
+                        document.execCommand('copy');
+                        showCopySuccess();
+                    });
+                } catch (err) {
+                    // Final Fallback
+                    document.execCommand('copy');
+                    showCopySuccess();
+                }
+            });
+
+            function showCopySuccess() {
+                copyBtn.textContent = "Copied!";
+                copyBtn.classList.add("success");
+                
+                setTimeout(() => {
+                    copyBtn.textContent = "Copy";
+                    copyBtn.classList.remove("success");
+                }, 2500);
+            }
+        });
+    </script>
+
+</body>
+</html>
