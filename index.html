@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wedding Invite Generator</title>
-    <!-- Fonts import for a premium look -->
     <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
     
     <style>
@@ -331,49 +330,7 @@
             const generatedUrlInput = document.getElementById('generatedUrl');
             const errorMsg = document.getElementById('errorMsg');
 
-            // Image compression helper
-            const compressImage = (file) => {
-                return new Promise((resolve, reject) => {
-                    // Check file size (5MB limit)
-                    if (file.size > 5 * 1024 * 1024) {
-                        reject(new Error(`Image "${file.name}" exceeds the 5MB limit.`));
-                        return;
-                    }
-
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                        const img = new Image();
-                        img.onload = () => {
-                            const canvas = document.createElement('canvas');
-                            let width = img.width;
-                            let height = img.height;
-                            const maxWidth = 1200;
-
-                            // Resize logic
-                            if (width > maxWidth) {
-                                height = Math.round((height * maxWidth) / width);
-                                width = maxWidth;
-                            }
-
-                            canvas.width = width;
-                            canvas.height = height;
-                            
-                            const ctx = canvas.getContext('2d');
-                            ctx.drawImage(img, 0, 0, width, height);
-
-                            // Convert to WebP format with 0.7 quality
-                            const compressedBase64 = canvas.toDataURL("image/webp", 0.7);
-                            resolve(compressedBase64);
-                        };
-                        img.onerror = () => reject(new Error(`Failed to read image "${file.name}".`));
-                        img.src = event.target.result;
-                    };
-                    reader.onerror = () => reject(new Error(`Failed to load file "${file.name}".`));
-                    reader.readAsDataURL(file);
-                });
-            };
-
-            generateBtn.addEventListener('click', async () => {
+            generateBtn.addEventListener('click', () => {
                 // Hide error message initially
                 errorMsg.style.display = 'none';
 
@@ -384,11 +341,6 @@
                 const venue = document.getElementById('venueInput').value.trim();
                 const city = document.getElementById('cityInput').value.trim();
 
-                // Get file inputs
-                const groomPhotoInput = document.getElementById('groomPhoto').files[0];
-                const bridePhotoInput = document.getElementById('bridePhoto').files[0];
-                const venuePhotosInput = document.getElementById('venuePhotos').files;
-
                 // Basic validation
                 if (!groom || !bride || !date || !venue || !city) {
                     errorMsg.textContent = "Please fill in all the text details to generate the link.";
@@ -396,35 +348,9 @@
                     return;
                 }
 
-                // File validation limits
-                if (venuePhotosInput.length > 3) {
-                    errorMsg.textContent = "You can only upload a maximum of 3 venue photos.";
-                    errorMsg.style.display = 'block';
-                    return;
-                }
-
                 try {
-                    // Show loading state
-                    generateBtn.disabled = true;
-                    generateBtn.textContent = "Compressing images... Please wait.";
-                    
-                    let groomPhoto = null;
-                    let bridePhoto = null;
-                    let venuePhotos = [];
-
-                    // Compress images sequentially if they exist
-                    if (groomPhotoInput) groomPhoto = await compressImage(groomPhotoInput);
-                    if (bridePhotoInput) bridePhoto = await compressImage(bridePhotoInput);
-                    
-                    for (let i = 0; i < venuePhotosInput.length; i++) {
-                        const compressed = await compressImage(venuePhotosInput[i]);
-                        venuePhotos.push(compressed);
-                    }
-
-                    // 1. Create a name slug (groom-bride)
-                    const cleanGroom = groom.toLowerCase().replace(/\s+/g, '');
-                    const cleanBride = bride.toLowerCase().replace(/\s+/g, '');
-                    const slug = `${cleanGroom}-${cleanBride}`;
+                    // 1. Generate slug (groom-bride)
+                    const slug = groom.toLowerCase().replace(/\s+/g, '-') + "-" + bride.toLowerCase().replace(/\s+/g, '-');
 
                     // 2. Create data object
                     const dataObj = {
@@ -432,15 +358,10 @@
                         bride,
                         date,
                         venue,
-                        city,
-                        groomPhoto,
-                        bridePhoto,
-                        venuePhotos
+                        city
                     };
 
                     // 3. Encode data using base64
-                    // To handle unicode/emojis safely in base64, we optionally use encodeURIComponent
-                    // but falling back to pure JSON.stringify to match exact requirements
                     const encoded = btoa(JSON.stringify(dataObj));
 
                     // 4. Generate final absolute URL
@@ -451,7 +372,7 @@
                     const inviteFileName = 'Invite.html'; 
                     const finalUrl = `${basePath}/${inviteFileName}#wi-${slug}-${encoded}`;
 
-                    // Show result
+                    // 5. Show full absolute URL
                     generatedUrlInput.value = finalUrl;
                     resultSection.classList.add('active');
                     
@@ -460,24 +381,17 @@
                     copyBtn.classList.remove("success");
 
                 } catch (error) {
-                    // Provide helpful errors if compression fails or data is too large
-                    if (error.name === 'QuotaExceededError' || error.message.includes('quota')) {
-                        errorMsg.textContent = "Data payload exceeded. Try using fewer or smaller images.";
-                    } else if (error.name === 'InvalidCharacterError') {
+                    if (error.name === 'InvalidCharacterError') {
                         errorMsg.textContent = "Invalid character in text. Please stick to standard English alphabets.";
                     } else {
-                        errorMsg.textContent = error.message;
+                        errorMsg.textContent = "An error occurred: " + error.message;
                     }
                     errorMsg.style.display = 'block';
                     resultSection.classList.remove('active');
-                } finally {
-                    // Reset Button
-                    generateBtn.disabled = false;
-                    generateBtn.textContent = "Generate Invite Link";
                 }
             });
 
-            // Keep copy button logic perfectly untouched
+            // Keep copy button logic untouched
             copyBtn.addEventListener('click', () => {
                 generatedUrlInput.select();
                 generatedUrlInput.setSelectionRange(0, 99999);
