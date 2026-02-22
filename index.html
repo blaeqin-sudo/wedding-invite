@@ -105,6 +105,29 @@
             background-color: #fff;
         }
 
+        /* File input specific styling to match premium look */
+        .form-group input[type="file"] {
+            padding: 9px 12px;
+            cursor: pointer;
+        }
+
+        .form-group input[type="file"]::file-selector-button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            margin-right: 10px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .form-group input[type="file"]::file-selector-button:hover {
+            background-color: var(--primary-hover);
+        }
+
         .row {
             display: flex;
             gap: 15px;
@@ -129,15 +152,20 @@
             margin-top: 10px;
         }
 
-        .btn-primary:hover {
+        .btn-primary:hover:not(:disabled) {
             background-color: var(--primary-hover);
         }
 
-        .btn-primary:active {
+        .btn-primary:active:not(:disabled) {
             transform: scale(0.98);
         }
 
-        /* Replaced alert() with a clean inline error message */
+        .btn-primary:disabled {
+            background-color: #d3b4b7;
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+
         .error-msg {
             color: #dc3545;
             font-size: 0.85rem;
@@ -250,6 +278,17 @@
                 </div>
             </div>
 
+            <div class="row">
+                <div class="form-group">
+                    <label for="groomPhoto">Groom Photo (Max 5MB)</label>
+                    <input type="file" id="groomPhoto" accept="image/*">
+                </div>
+                <div class="form-group">
+                    <label for="bridePhoto">Bride Photo (Max 5MB)</label>
+                    <input type="file" id="bridePhoto" accept="image/*">
+                </div>
+            </div>
+
             <div class="form-group">
                 <label for="dateInput">Wedding Date & Time</label>
                 <input type="text" id="dateInput" placeholder="e.g. Saturday, 14th February 2027" required>
@@ -258,6 +297,11 @@
             <div class="form-group">
                 <label for="venueInput">Venue Name</label>
                 <input type="text" id="venueInput" placeholder="e.g. The Grand Regal Gardens" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="venuePhotos">Venue Photos (Max 3)</label>
+                <input type="file" id="venuePhotos" accept="image/*" multiple>
             </div>
 
             <div class="form-group">
@@ -287,7 +331,49 @@
             const generatedUrlInput = document.getElementById('generatedUrl');
             const errorMsg = document.getElementById('errorMsg');
 
-            generateBtn.addEventListener('click', () => {
+            // Image compression helper
+            const compressImage = (file) => {
+                return new Promise((resolve, reject) => {
+                    // Check file size (5MB limit)
+                    if (file.size > 5 * 1024 * 1024) {
+                        reject(new Error(`Image "${file.name}" exceeds the 5MB limit.`));
+                        return;
+                    }
+
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        const img = new Image();
+                        img.onload = () => {
+                            const canvas = document.createElement('canvas');
+                            let width = img.width;
+                            let height = img.height;
+                            const maxWidth = 1200;
+
+                            // Resize logic
+                            if (width > maxWidth) {
+                                height = Math.round((height * maxWidth) / width);
+                                width = maxWidth;
+                            }
+
+                            canvas.width = width;
+                            canvas.height = height;
+                            
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(img, 0, 0, width, height);
+
+                            // Convert to WebP format with 0.7 quality
+                            const compressedBase64 = canvas.toDataURL("image/webp", 0.7);
+                            resolve(compressedBase64);
+                        };
+                        img.onerror = () => reject(new Error(`Failed to read image "${file.name}".`));
+                        img.src = event.target.result;
+                    };
+                    reader.onerror = () => reject(new Error(`Failed to load file "${file.name}".`));
+                    reader.readAsDataURL(file);
+                });
+            };
+
+            generateBtn.addEventListener('click', async () => {
                 // Hide error message initially
                 errorMsg.style.display = 'none';
 
@@ -298,68 +384,114 @@
                 const venue = document.getElementById('venueInput').value.trim();
                 const city = document.getElementById('cityInput').value.trim();
 
+                // Get file inputs
+                const groomPhotoInput = document.getElementById('groomPhoto').files[0];
+                const bridePhotoInput = document.getElementById('bridePhoto').files[0];
+                const venuePhotosInput = document.getElementById('venuePhotos').files;
+
                 // Basic validation
                 if (!groom || !bride || !date || !venue || !city) {
+                    errorMsg.textContent = "Please fill in all the text details to generate the link.";
                     errorMsg.style.display = 'block';
                     return;
                 }
 
-                // 1. Create a name slug (stripping spaces to ensure clean URLs)
-                const cleanGroom = groom.toLowerCase().replace(/\s+/g, '');
-                const cleanBride = bride.toLowerCase().replace(/\s+/g, '');
-                const nameSlug = `${cleanGroom}-${cleanBride}`;
-
-                // 2. Generate random ID
-                const uniqueId = Math.random().toString(36).substring(2,10);
-
-                // 3. Create data object
-                const dataObj = {
-                    groom,
-                    bride,
-                    date,
-                    venue,
-                    city
-                };
-
-                // 4. Encode data
-                const encoded = btoa(JSON.stringify(dataObj));
-
-                // 5. Store encoded data in localStorage
-                localStorage.setItem("wi_" + uniqueId, encoded);
-
-                // Get base URL (Removing query parameters or hashes from current URL)
-                const currentPath = window.location.href.split('?')[0].split('#')[0];
-                const basePath = currentPath.substring(0, currentPath.lastIndexOf('/'));
-                const inviteFileName = 'Invite.html'; 
-                
-                // 6. Generate final URL with Hash
-                const finalUrl = `${basePath}/${inviteFileName}#wi-${nameSlug}-${uniqueId}`;
-
-                // Show result
-                generatedUrlInput.value = finalUrl;
-                resultSection.classList.add('active');
-                
-                // Reset copy button if it was previously clicked
-                copyBtn.textContent = "Copy";
-                copyBtn.classList.remove("success");
-            });
-
-            copyBtn.addEventListener('click', () => {
-                // Use fallback for document.execCommand in environments where clipboard API might be restricted (like iFrames)
-                generatedUrlInput.select();
-                generatedUrlInput.setSelectionRange(0, 99999); // For mobile devices
+                // File validation limits
+                if (venuePhotosInput.length > 3) {
+                    errorMsg.textContent = "You can only upload a maximum of 3 venue photos.";
+                    errorMsg.style.display = 'block';
+                    return;
+                }
 
                 try {
-                    // Modern clipboard API
+                    // Show loading state
+                    generateBtn.disabled = true;
+                    generateBtn.textContent = "Compressing images... Please wait.";
+                    
+                    let groomPhoto = null;
+                    let bridePhoto = null;
+                    let venuePhotos = [];
+
+                    // Compress images sequentially if they exist
+                    if (groomPhotoInput) groomPhoto = await compressImage(groomPhotoInput);
+                    if (bridePhotoInput) bridePhoto = await compressImage(bridePhotoInput);
+                    
+                    for (let i = 0; i < venuePhotosInput.length; i++) {
+                        const compressed = await compressImage(venuePhotosInput[i]);
+                        venuePhotos.push(compressed);
+                    }
+
+                    // 1. Create a name slug
+                    const cleanGroom = groom.toLowerCase().replace(/\s+/g, '');
+                    const cleanBride = bride.toLowerCase().replace(/\s+/g, '');
+                    const nameSlug = `${cleanGroom}-${cleanBride}`;
+
+                    // 2. Generate random ID
+                    const uniqueId = Math.random().toString(36).substring(2,10);
+
+                    // 3. Create data object structure exactly as requested
+                    const dataObj = {
+                        groom,
+                        bride,
+                        date,
+                        venue,
+                        city,
+                        groomPhoto,
+                        bridePhoto,
+                        venuePhotos
+                    };
+
+                    // 4 & 5. Encode data using base64 stringify requirement
+                    const encoded = btoa(JSON.stringify(dataObj));
+
+                    // 6. Store encoded data in localStorage
+                    localStorage.setItem("wi_" + uniqueId, encoded);
+
+                    // 7. Get base URL and Generate final URL with Hash
+                    const currentPath = window.location.href.split('?')[0].split('#')[0];
+                    const basePath = currentPath.substring(0, currentPath.lastIndexOf('/'));
+                    const inviteFileName = 'Invite.html'; 
+                    const finalUrl = `${basePath}/${inviteFileName}#wi-${nameSlug}-${uniqueId}`;
+
+                    // Show result
+                    generatedUrlInput.value = finalUrl;
+                    resultSection.classList.add('active');
+                    
+                    // Reset copy button if it was previously clicked
+                    copyBtn.textContent = "Copy";
+                    copyBtn.classList.remove("success");
+
+                } catch (error) {
+                    // Provide helpful errors if compression fails or storage is full
+                    if (error.name === 'QuotaExceededError' || error.message.includes('quota')) {
+                        errorMsg.textContent = "Storage limit exceeded. Try using fewer or smaller images.";
+                    } else if (error.name === 'InvalidCharacterError') {
+                        errorMsg.textContent = "Invalid character in text. Please stick to standard English alphabets.";
+                    } else {
+                        errorMsg.textContent = error.message;
+                    }
+                    errorMsg.style.display = 'block';
+                    resultSection.classList.remove('active');
+                } finally {
+                    // Reset Button
+                    generateBtn.disabled = false;
+                    generateBtn.textContent = "Generate Invite Link";
+                }
+            });
+
+            // Keep copy button logic perfectly untouched
+            copyBtn.addEventListener('click', () => {
+                generatedUrlInput.select();
+                generatedUrlInput.setSelectionRange(0, 99999);
+
+                try {
                     navigator.clipboard.writeText(generatedUrlInput.value).then(() => {
                         showCopySuccess();
                     }).catch(() => {
-                        // Fallback
                         document.execCommand('copy');
                         showCopySuccess();
                     });
                 } catch (err) {
-                    // Final Fallback
                     document.execCommand('copy');
                     showCopySuccess();
                 }
