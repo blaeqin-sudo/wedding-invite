@@ -421,15 +421,12 @@
                         venuePhotos.push(compressed);
                     }
 
-                    // 1. Create a name slug
+                    // 1. Create a name slug (groom-bride)
                     const cleanGroom = groom.toLowerCase().replace(/\s+/g, '');
                     const cleanBride = bride.toLowerCase().replace(/\s+/g, '');
-                    const nameSlug = `${cleanGroom}-${cleanBride}`;
+                    const slug = `${cleanGroom}-${cleanBride}`;
 
-                    // 2. Generate random ID
-                    const uniqueId = Math.random().toString(36).substring(2,10);
-
-                    // 3. Create data object structure exactly as requested
+                    // 2. Create data object
                     const dataObj = {
                         groom,
                         bride,
@@ -441,17 +438,18 @@
                         venuePhotos
                     };
 
-                    // 4 & 5. Encode data using base64 stringify requirement
+                    // 3. Encode data using base64
+                    // To handle unicode/emojis safely in base64, we optionally use encodeURIComponent
+                    // but falling back to pure JSON.stringify to match exact requirements
                     const encoded = btoa(JSON.stringify(dataObj));
 
-                    // 6. Store encoded data in localStorage
-                    localStorage.setItem("wi_" + uniqueId, encoded);
-
-                    // 7. Get base URL and Generate final URL with Hash
+                    // 4. Generate final absolute URL
                     const currentPath = window.location.href.split('?')[0].split('#')[0];
-                    const basePath = currentPath.substring(0, currentPath.lastIndexOf('/'));
+                    let basePath = currentPath.substring(0, currentPath.lastIndexOf('/'));
+                    if (basePath === '') basePath = window.location.origin;
+                    
                     const inviteFileName = 'Invite.html'; 
-                    const finalUrl = `${basePath}/${inviteFileName}#wi-${nameSlug}-${uniqueId}`;
+                    const finalUrl = `${basePath}/${inviteFileName}#wi-${slug}-${encoded}`;
 
                     // Show result
                     generatedUrlInput.value = finalUrl;
@@ -462,9 +460,9 @@
                     copyBtn.classList.remove("success");
 
                 } catch (error) {
-                    // Provide helpful errors if compression fails or storage is full
+                    // Provide helpful errors if compression fails or data is too large
                     if (error.name === 'QuotaExceededError' || error.message.includes('quota')) {
-                        errorMsg.textContent = "Storage limit exceeded. Try using fewer or smaller images.";
+                        errorMsg.textContent = "Data payload exceeded. Try using fewer or smaller images.";
                     } else if (error.name === 'InvalidCharacterError') {
                         errorMsg.textContent = "Invalid character in text. Please stick to standard English alphabets.";
                     } else {
