@@ -543,6 +543,7 @@
         </div>
     </div>
 
+    <!-- Envelope Animation Script (Kept Intact) -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const container = document.getElementById('cardContainer');
@@ -600,31 +601,49 @@
         });
     </script>
     
-    <!-- Dynamic Content Update & Cinematic Gallery Script -->
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const hash = window.location.hash;
+    <!-- Firebase Data Fetch & Cinematic Gallery Script -->
+    <script type="module">
+        // 1. Add Firebase modular SDK via CDN
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-            // 1. Read hash format: #wi-slug-encodedData
-            if (hash && hash.startsWith('#wi-')) {
-                const hashStr = hash.substring(4); // Remove '#wi-'
-                const lastDashIndex = hashStr.lastIndexOf('-');
-                
-                if (lastDashIndex !== -1) {
-                    const slug = hashStr.substring(0, lastDashIndex);
-                    const encodedData = hashStr.substring(lastDashIndex + 1);
-                    
-                    try {
-                        // 2. Decode encodedData
-                        const data = JSON.parse(atob(encodedData));
-                        
-                        // 3. Populate Fields
+        // 2. Add firebaseConfig provided by user
+        const firebaseConfig = {
+            apiKey: "AIzaSyAYAAzs9_zCgS9dQ3ZS1KvSv0LSgD4H54M",
+            authDomain: "wedding-invite-629e2.firebaseapp.com",
+            projectId: "wedding-invite-629e2",
+            storageBucket: "wedding-invite-629e2.firebasestorage.app",
+            messagingSenderId: "993883990855",
+            appId: "1:993883990855:web:d66af6c28def811d253a62"
+        };
+
+        // 3. Initialize Firebase & Firestore
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // 4. On DOMContentLoaded: Read params & Fetch
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Read URL parameters
+            const params = new URLSearchParams(window.location.search);
+            const id = params.get("id");
+            const slug = params.get("slug");
+
+            if (id) {
+                try {
+                    // Fetch document using id
+                    const docSnap = await getDoc(doc(db, "invites", id));
+
+                    // If document exists
+                    if (docSnap.exists()) {
+                        const data = docSnap.data();
+
+                        // Populate text fields
                         const fieldsToUpdate = {
-                            'groomName': data.groomName || data.groom,
-                            'brideName': data.brideName || data.bride,
-                            'weddingDate': data.weddingDate || data.date,
-                            'venueName': data.venueName || data.venue,
-                            'venueCity': data.venueCity || data.city
+                            'groomName': data.groomName,
+                            'brideName': data.brideName,
+                            'weddingDate': data.weddingDate,
+                            'venueName': data.venueName,
+                            'venueCity': data.venueCity
                         };
 
                         for (const [elementId, value] of Object.entries(fieldsToUpdate)) {
@@ -634,67 +653,87 @@
                             }
                         }
 
-                        // 4. Clean URL replacing hash with just slug
-                        window.history.replaceState({}, document.title, slug);
-
-                        // 5. Automatically Load Couple Photos based on slug
+                        // Set Couple Photos
                         const couplePhotosContainer = document.getElementById('couplePhotos');
+                        couplePhotosContainer.innerHTML = ''; // Clear container
+
+                        if (data.groomPhotoURL) {
+                            const gImg = document.createElement('img');
+                            gImg.alt = "Groom";
+                            gImg.onload = () => { 
+                                gImg.style.display = 'block'; 
+                                couplePhotosContainer.style.display = 'flex'; 
+                            };
+                            gImg.src = data.groomPhotoURL;
+                            couplePhotosContainer.appendChild(gImg);
+                        }
                         
-                        // Create placeholder images strictly for the DOM order (Left: Groom, Right: Bride)
-                        const gImg = document.createElement('img');
-                        gImg.alt = "Groom";
-                        couplePhotosContainer.appendChild(gImg);
-                        
-                        const bImg = document.createElement('img');
-                        bImg.alt = "Bride";
-                        couplePhotosContainer.appendChild(bImg);
+                        if (data.bridePhotoURL) {
+                            const bImg = document.createElement('img');
+                            bImg.alt = "Bride";
+                            bImg.onload = () => { 
+                                bImg.style.display = 'block'; 
+                                couplePhotosContainer.style.display = 'flex'; 
+                            };
+                            bImg.src = data.bridePhotoURL;
+                            couplePhotosContainer.appendChild(bImg);
+                        }
 
-                        gImg.onload = () => { 
-                            couplePhotosContainer.style.display = 'flex'; 
-                            gImg.style.display = 'block'; 
-                        };
-                        gImg.src = `images/${slug}/groom.webp`;
+                        // Set Venue Gallery Images
+                        if (data.venuePhotoURLs && Array.isArray(data.venuePhotoURLs) && data.venuePhotoURLs.length > 0) {
+                            const openGalleryBtn = document.getElementById('openGalleryBtn');
+                            openGalleryBtn.style.display = 'inline-block';
+                            initGallerySystem(data.venuePhotoURLs);
+                        }
 
-                        bImg.onload = () => { 
-                            couplePhotosContainer.style.display = 'flex'; 
-                            bImg.style.display = 'block'; 
-                        };
-                        bImg.src = `images/${slug}/bride.webp`;
+                        // 5. After successful load: Clean URL
+                        if (slug) {
+                            window.history.replaceState({}, document.title, slug);
+                        }
 
-                        // 6. Automatically Load Gallery Photos based on slug & hide gracefully if 404
-                        const galleryUrls = [
-                            `images/${slug}/venue1.webp`,
-                            `images/${slug}/venue2.webp`
-                        ];
-
-                        // Attempt to load images as promises, preserving original array index order
-                        Promise.all(galleryUrls.map(url => {
-                            return new Promise((resolve) => {
-                                const img = new Image();
-                                img.onload = () => resolve(url);
-                                img.onerror = () => resolve(null); // Resolve null if 404
-                                img.src = url;
-                            });
-                        })).then(results => {
-                            // Filter out nulls (failed loads)
-                            const validGalleryImages = results.filter(url => url !== null);
-                            
-                            // Only show gallery trigger if there's at least 1 successfully loaded image
-                            if (validGalleryImages.length > 0) {
-                                const openGalleryBtn = document.getElementById('openGalleryBtn');
-                                openGalleryBtn.style.display = 'inline-block';
-                                initGallerySystem(validGalleryImages);
-                            }
-                        });
-
-                    } catch (e) {
-                        console.error("Failed to decode or parse invitation data:", e);
+                    } else {
+                        // 7. If document not found: Show a clean error inside the card
+                        showError("Invitation<br>Not Found", "Please double-check your link and try again.");
                     }
+                } catch (error) {
+                    console.error("Error fetching invitation data from Firestore:", error);
+                    showError("Loading Error", "Could not load the invitation. Please try again later.");
                 }
+            } else {
+                // If no ID is passed in the URL at all
+                showError("No Invitation ID", "No invitation ID was found in the link.");
             }
         });
 
-        // --- CINEMATIC GALLERY LOGIC ---
+        // Function to cleanly inject error messages into the card design
+        function showError(titleHtml, messageHtml) {
+            const namesContainer = document.querySelector('.names');
+            if (namesContainer) {
+                namesContainer.innerHTML = `<span style="font-size: 1.6rem; line-height: 1.4;">${titleHtml}</span>`;
+            }
+            
+            const detailsContainers = document.querySelectorAll('.details');
+            if (detailsContainers[0]) {
+                detailsContainers[0].innerHTML = messageHtml;
+            }
+            if (detailsContainers[1]) {
+                detailsContainers[1].style.display = 'none';
+            }
+            
+            const venueContainer = document.querySelector('.venue');
+            if (venueContainer) venueContainer.style.display = 'none';
+            
+            const divider = document.querySelector('.divider');
+            if (divider) divider.style.display = 'none';
+            
+            const couplePhotos = document.getElementById('couplePhotos');
+            if (couplePhotos) couplePhotos.style.display = 'none';
+            
+            const galleryBtn = document.getElementById('openGalleryBtn');
+            if (galleryBtn) galleryBtn.style.display = 'none';
+        }
+
+        // --- CINEMATIC GALLERY LOGIC (Untouched, merged into module scope) ---
         function initGallerySystem(imagesArray) {
             const track = document.getElementById('sliderTrack');
             const dotsContainer = document.getElementById('sliderDots');
