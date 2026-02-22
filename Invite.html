@@ -602,88 +602,102 @@
     <!-- Dynamic Content Update & Cinematic Gallery Script -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            let uniqueId = null;
-            let nameSlug = null;
             const hash = window.location.hash;
-            
-            // 1. Read hash format: #wi-nameSlug-uniqueId
+            let data = null;
+            let slug = null;
+
+            // 1. Read hash format: #wi-slug-encodedData
             if (hash && hash.startsWith('#wi-')) {
-                const parts = hash.substring(4).split('-'); 
-                if (parts.length >= 1) {
-                    uniqueId = parts.pop();      
-                    nameSlug = parts.join('-');  
-                    localStorage.setItem('wi_last_id', uniqueId);
-                    if (nameSlug) localStorage.setItem('wi_last_slug', nameSlug);
+                const hashStr = hash.substring(4); // Remove '#wi-'
+                const lastDashIndex = hashStr.lastIndexOf('-');
+                
+                if (lastDashIndex !== -1) {
+                    slug = hashStr.substring(0, lastDashIndex);
+                    const encodedData = hashStr.substring(lastDashIndex + 1);
+                    
+                    try {
+                        // Decode encodedData
+                        data = JSON.parse(atob(encodedData));
+                        
+                        // Store decoded data temporarily in sessionStorage
+                        sessionStorage.setItem('wi_invite_data', JSON.stringify(data));
+                        
+                        // Clean URL and replace it with just the slug
+                        window.history.replaceState(
+                            {},
+                            document.title,
+                            slug
+                        );
+                    } catch (e) {
+                        console.error("Failed to decode invitation data from URL:", e);
+                    }
                 }
-            } else {
-                // 2. Fallback for page refresh
-                uniqueId = localStorage.getItem('wi_last_id');
-                nameSlug = localStorage.getItem('wi_last_slug');
+            } 
+            
+            // 2. If no hash, but sessionStorage has saved data (handles page refresh)
+            if (!data) {
+                const savedData = sessionStorage.getItem('wi_invite_data');
+                if (savedData) {
+                    try {
+                        data = JSON.parse(savedData);
+                    } catch (e) {
+                        console.error("Failed to parse saved invitation data:", e);
+                    }
+                }
             }
 
-            // 3. Fetch and process data
-            if (uniqueId) {
+            // 3. Populate all invite details if data exists
+            if (data) {
                 try {
-                    const encodedData = localStorage.getItem("wi_" + uniqueId);
-                    if (encodedData) {
-                        const data = JSON.parse(atob(encodedData));
-                        
-                        // Populate Text Fields
-                        const fieldsToUpdate = {
-                            'groomName': data.groomName || data.groom,
-                            'brideName': data.brideName || data.bride,
-                            'weddingDate': data.weddingDate || data.date,
-                            'venueName': data.venueName || data.venue,
-                            'venueCity': data.venueCity || data.city
-                        };
+                    // Populate Text Fields
+                    const fieldsToUpdate = {
+                        'groomName': data.groomName || data.groom,
+                        'brideName': data.brideName || data.bride,
+                        'weddingDate': data.weddingDate || data.date,
+                        'venueName': data.venueName || data.venue,
+                        'venueCity': data.venueCity || data.city
+                    };
 
-                        for (const [elementId, value] of Object.entries(fieldsToUpdate)) {
-                            if (value) {
-                                const el = document.getElementById(elementId);
-                                if (el) el.textContent = value;
-                            }
-                        }
-
-                        // --- NEW: Inject Couple Photos ---
-                        const groomImgSrc = data.groomPhoto || data.groomImage;
-                        const brideImgSrc = data.bridePhoto || data.brideImage;
-                        const couplePhotosContainer = document.getElementById('couplePhotos');
-                        
-                        if (groomImgSrc || brideImgSrc) {
-                            couplePhotosContainer.style.display = 'flex';
-                            if (groomImgSrc) {
-                                const gImg = document.createElement('img');
-                                gImg.src = groomImgSrc;
-                                gImg.alt = "Groom";
-                                couplePhotosContainer.appendChild(gImg);
-                            }
-                            if (brideImgSrc) {
-                                const bImg = document.createElement('img');
-                                bImg.src = brideImgSrc;
-                                bImg.alt = "Bride";
-                                couplePhotosContainer.appendChild(bImg);
-                            }
-                        }
-
-                        // --- NEW: Inject Venue Gallery ---
-                        const galleryArray = data.gallery || data.venueImages || data.images;
-                        if (galleryArray && Array.isArray(galleryArray) && galleryArray.length > 0) {
-                            
-                            const openGalleryBtn = document.getElementById('openGalleryBtn');
-                            openGalleryBtn.style.display = 'inline-block';
-
-                            initGallerySystem(galleryArray);
-                        }
-
-                        // Update URL silently
-                        if (hash && nameSlug) {
-                            window.history.replaceState({}, document.title, nameSlug);
+                    for (const [elementId, value] of Object.entries(fieldsToUpdate)) {
+                        if (value) {
+                            const el = document.getElementById(elementId);
+                            if (el) el.textContent = value;
                         }
                     }
+
+                    // --- Inject Couple Photos ---
+                    const groomImgSrc = data.groomPhoto || data.groomImage;
+                    const brideImgSrc = data.bridePhoto || data.brideImage;
+                    const couplePhotosContainer = document.getElementById('couplePhotos');
+                    
+                    if (groomImgSrc || brideImgSrc) {
+                        couplePhotosContainer.style.display = 'flex';
+                        if (groomImgSrc) {
+                            const gImg = document.createElement('img');
+                            gImg.src = groomImgSrc;
+                            gImg.alt = "Groom";
+                            couplePhotosContainer.appendChild(gImg);
+                        }
+                        if (brideImgSrc) {
+                            const bImg = document.createElement('img');
+                            bImg.src = brideImgSrc;
+                            bImg.alt = "Bride";
+                            couplePhotosContainer.appendChild(bImg);
+                        }
+                    }
+
+                    // --- Inject Venue Gallery ---
+                    const galleryArray = data.gallery || data.venueImages || data.images;
+                    if (galleryArray && Array.isArray(galleryArray) && galleryArray.length > 0) {
+                        const openGalleryBtn = document.getElementById('openGalleryBtn');
+                        openGalleryBtn.style.display = 'inline-block';
+                        initGallerySystem(galleryArray);
+                    }
                 } catch (e) {
-                    console.warn("Could not load invitation data:", e);
+                    console.warn("Could not render invitation data:", e);
                 }
             }
+            // 4. If no data at all, it simply stops here and the default card shows.
         });
 
         // --- CINEMATIC GALLERY LOGIC ---
