@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wedding Invite Generator</title>
+    <!-- Fonts import for a premium look -->
     <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
     
     <style>
@@ -322,32 +323,7 @@
         </div>
     </div>
 
-    <!-- Modular Firebase Scripts (v10.12.2 CDN) -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
-
-        // Your Exact Firebase Configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyAYAAzs9_zCgS9dQ3ZS1KvSv0LSgD4H54M",
-            authDomain: "wedding-invite-629e2.firebaseapp.com",
-            projectId: "wedding-invite-629e2",
-            storageBucket: "wedding-invite-629e2.firebasestorage.app",
-            messagingSenderId: "993883990855",
-            appId: "1:993883990855:web:d66af6c28def811d253a62"
-        };
-
-        // Initialize Firebase safely
-        let app, db, storage;
-        try {
-            app = initializeApp(firebaseConfig);
-            db = getFirestore(app);
-            storage = getStorage(app);
-        } catch (e) {
-            console.warn("Firebase not properly initialized. Make sure to add your config.", e);
-        }
-
+    <script>
         document.addEventListener('DOMContentLoaded', () => {
             const generateBtn = document.getElementById('generateBtn');
             const copyBtn = document.getElementById('copyBtn');
@@ -355,22 +331,63 @@
             const generatedUrlInput = document.getElementById('generatedUrl');
             const errorMsg = document.getElementById('errorMsg');
 
-            generateBtn.addEventListener('click', async () => {
-                // Hide error message and reset results initially
-                errorMsg.style.display = 'none';
-                resultSection.classList.remove('active');
+            // Image compression helper
+            const compressImage = (file) => {
+                return new Promise((resolve, reject) => {
+                    // Check file size (5MB limit)
+                    if (file.size > 5 * 1024 * 1024) {
+                        reject(new Error(`Image "${file.name}" exceeds the 5MB limit.`));
+                        return;
+                    }
 
-                // Get textual values
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        const img = new Image();
+                        img.onload = () => {
+                            const canvas = document.createElement('canvas');
+                            let width = img.width;
+                            let height = img.height;
+                            const maxWidth = 1200;
+
+                            // Resize logic
+                            if (width > maxWidth) {
+                                height = Math.round((height * maxWidth) / width);
+                                width = maxWidth;
+                            }
+
+                            canvas.width = width;
+                            canvas.height = height;
+                            
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(img, 0, 0, width, height);
+
+                            // Convert to WebP format with 0.7 quality
+                            const compressedBase64 = canvas.toDataURL("image/webp", 0.7);
+                            resolve(compressedBase64);
+                        };
+                        img.onerror = () => reject(new Error(`Failed to read image "${file.name}".`));
+                        img.src = event.target.result;
+                    };
+                    reader.onerror = () => reject(new Error(`Failed to load file "${file.name}".`));
+                    reader.readAsDataURL(file);
+                });
+            };
+
+            generateBtn.addEventListener('click', async () => {
+                // Hide error message initially
+                errorMsg.style.display = 'none';
+
+                // Get values
                 const groom = document.getElementById('groomInput').value.trim();
                 const bride = document.getElementById('brideInput').value.trim();
                 const date = document.getElementById('dateInput').value.trim();
                 const venue = document.getElementById('venueInput').value.trim();
                 const city = document.getElementById('cityInput').value.trim();
 
-                // Get file values
-                const groomFile = document.getElementById('groomPhoto').files[0];
-                const brideFile = document.getElementById('bridePhoto').files[0];
-                const venueFiles = document.getElementById('venuePhotos').files;
+                // Get file inputs
+                const groomPhotoInput = document.getElementById('groomPhoto').files[0];
+                const bridePhotoInput = document.getElementById('bridePhoto').files[0];
+                const venuePhotosInput = document.getElementById('venuePhotos').files;
 
                 // Basic validation
                 if (!groom || !bride || !date || !venue || !city) {
@@ -379,82 +396,88 @@
                     return;
                 }
 
-                if (!app || !db || !storage) {
-                    errorMsg.textContent = "Firebase is not configured. Please add your config object in the code.";
+                // File validation limits
+                if (venuePhotosInput.length > 3) {
+                    errorMsg.textContent = "You can only upload a maximum of 3 venue photos.";
                     errorMsg.style.display = 'block';
                     return;
                 }
 
-                // Loading State
-                generateBtn.disabled = true;
-                generateBtn.textContent = "Uploading & Generating...";
-
                 try {
-                    // 1. Generate slug (groom-bride)
-                    const slug = groom.toLowerCase().replace(/\s+/g, '-') + "-" + bride.toLowerCase().replace(/\s+/g, '-');
+                    // Show loading state
+                    generateBtn.disabled = true;
+                    generateBtn.textContent = "Compressing images... Please wait.";
+                    
+                    let groomPhoto = null;
+                    let bridePhoto = null;
+                    let venuePhotos = [];
 
-                    // 2. Initialize Photo URLs
-                    let groomPhotoURL = null;
-                    let bridePhotoURL = null;
-                    const venuePhotoURLs = [];
-
-                    // Helper function to upload file and get download URL
-                    const uploadImage = async (file, path) => {
-                        const storageRef = ref(storage, path);
-                        await uploadBytes(storageRef, file);
-                        return await getDownloadURL(storageRef);
-                    };
-
-                    // 3. Upload images to Firebase Storage
-                    if (groomFile) {
-                        groomPhotoURL = await uploadImage(groomFile, `invites/${slug}/groom_${groomFile.name}`);
-                    }
-                    if (brideFile) {
-                        bridePhotoURL = await uploadImage(brideFile, `invites/${slug}/bride_${brideFile.name}`);
-                    }
-                    if (venueFiles.length > 0) {
-                        // Max 3 venue photos
-                        const maxPhotos = Math.min(venueFiles.length, 3);
-                        for (let i = 0; i < maxPhotos; i++) {
-                            const vFile = venueFiles[i];
-                            const url = await uploadImage(vFile, `invites/${slug}/venue_${i}_${vFile.name}`);
-                            venuePhotoURLs.push(url);
-                        }
+                    // Compress images sequentially if they exist
+                    if (groomPhotoInput) groomPhoto = await compressImage(groomPhotoInput);
+                    if (bridePhotoInput) bridePhoto = await compressImage(bridePhotoInput);
+                    
+                    for (let i = 0; i < venuePhotosInput.length; i++) {
+                        const compressed = await compressImage(venuePhotosInput[i]);
+                        venuePhotos.push(compressed);
                     }
 
-                    // 4. Create data object
+                    // 1. Create a name slug (groom-bride)
+                    const cleanGroom = groom.toLowerCase().replace(/\s+/g, '');
+                    const cleanBride = bride.toLowerCase().replace(/\s+/g, '');
+                    const slug = `${cleanGroom}-${cleanBride}`;
+
+                    // 2. Create data object
                     const dataObj = {
                         groom,
                         bride,
                         date,
                         venue,
                         city,
-                        slug,
-                        groomPhotoURL,
-                        bridePhotoURL,
-                        venuePhotoURLs,
-                        createdAt: new Date().toISOString()
+                        groomPhoto,
+                        bridePhoto,
+                        venuePhotos
                     };
 
-                    // 5. Save to Firestore collection "invites"
-                    const docRef = await addDoc(collection(db, "invites"), dataObj);
+                    // 3. Encode data using base64
+                    // To handle unicode/emojis safely in base64, we optionally use encodeURIComponent
+                    // but falling back to pure JSON.stringify to match exact requirements
+                    const encoded = btoa(JSON.stringify(dataObj));
 
-                    // 6. Redirect user to invite.html using the generated Document ID
-                    window.location.href = `invite.html?id=${docRef.id}`;
+                    // 4. Generate final absolute URL
+                    const currentPath = window.location.href.split('?')[0].split('#')[0];
+                    let basePath = currentPath.substring(0, currentPath.lastIndexOf('/'));
+                    if (basePath === '') basePath = window.location.origin;
+                    
+                    const inviteFileName = 'Invite.html'; 
+                    const finalUrl = `${basePath}/${inviteFileName}#wi-${slug}-${encoded}`;
+
+                    // Show result
+                    generatedUrlInput.value = finalUrl;
+                    resultSection.classList.add('active');
+                    
+                    // Reset copy button if it was previously clicked
+                    copyBtn.textContent = "Copy";
+                    copyBtn.classList.remove("success");
 
                 } catch (error) {
-                    console.error("Error generating invite:", error);
-                    errorMsg.textContent = "An error occurred: " + error.message;
+                    // Provide helpful errors if compression fails or data is too large
+                    if (error.name === 'QuotaExceededError' || error.message.includes('quota')) {
+                        errorMsg.textContent = "Data payload exceeded. Try using fewer or smaller images.";
+                    } else if (error.name === 'InvalidCharacterError') {
+                        errorMsg.textContent = "Invalid character in text. Please stick to standard English alphabets.";
+                    } else {
+                        errorMsg.textContent = error.message;
+                    }
                     errorMsg.style.display = 'block';
                     resultSection.classList.remove('active');
-                    
-                    // Reset Button State if error occurs
+                } finally {
+                    // Reset Button
                     generateBtn.disabled = false;
                     generateBtn.textContent = "Generate Invite Link";
                 }
             });
 
-            // Keep copy button logic untouched (in case you want to use it later or modify the redirect behavior)
+            // Keep copy button logic perfectly untouched
             copyBtn.addEventListener('click', () => {
                 generatedUrlInput.select();
                 generatedUrlInput.setSelectionRange(0, 99999);
