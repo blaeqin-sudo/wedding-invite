@@ -11,12 +11,14 @@
         :root {
             --primary: #b8868b;
             --primary-hover: #a37277;
+            --primary-light: #e6ccd0;
             --bg-color: #fdfbfb;
             --card-bg: #ffffff;
             --text-main: #4A3C31;
             --text-light: #8c7b70;
             --border-color: #e5d0a1;
             --input-bg: #faf8f5;
+            --success: #28a745;
         }
 
         * {
@@ -27,7 +29,8 @@
 
         body {
             font-family: 'Montserrat', sans-serif;
-            background: linear-gradient(135deg, #fdfbfb 0%, #f3e6e8 100%);
+            /* Smoother, premium radial gradient background */
+            background: radial-gradient(circle at top right, #fff0f1 0%, #fdfbfb 40%, #f3e6e8 100%);
             color: var(--text-main);
             display: flex;
             justify-content: center;
@@ -40,11 +43,13 @@
             background: var(--card-bg);
             width: 100%;
             max-width: 500px;
-            padding: 40px 30px;
-            border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.02);
+            padding: 45px 35px;
+            border-radius: 24px;
+            /* Enhanced, softer drop shadow for a floating effect */
+            box-shadow: 0 20px 40px rgba(184, 134, 139, 0.08), 0 1px 3px rgba(0, 0, 0, 0.03);
             position: relative;
             overflow: hidden;
+            transition: transform 0.3s ease;
         }
 
         .generator-card::before {
@@ -52,45 +57,55 @@
             position: absolute;
             top: 0; left: 0; right: 0;
             height: 6px;
-            background: linear-gradient(to right, #E0B3B4, #b8868b, #E0B3B4);
+            /* Smoother gradient top bar */
+            background: linear-gradient(90deg, #E0B3B4, #b8868b, #E0B3B4);
+            background-size: 200% 100%;
+            animation: gradientMove 3s ease infinite;
+        }
+
+        @keyframes gradientMove {
+            0% { background-position: 100% 0; }
+            50% { background-position: 0 0; }
+            100% { background-position: 100% 0; }
         }
 
         .header {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 35px;
         }
 
         .header h1 {
             font-family: 'Lora', serif;
-            font-size: 1.8rem;
+            font-size: 2rem;
             color: var(--primary);
             margin-bottom: 8px;
+            letter-spacing: -0.5px;
         }
 
         .header p {
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             color: var(--text-light);
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 22px;
         }
 
         .form-group label {
             display: block;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             font-weight: 600;
             margin-bottom: 8px;
             color: var(--text-main);
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 1px;
         }
 
         .form-group input {
             width: 100%;
-            padding: 12px 16px;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
+            padding: 14px 18px;
+            border: 1.5px solid var(--border-color);
+            border-radius: 12px;
             background-color: var(--input-bg);
             font-family: 'Montserrat', sans-serif;
             font-size: 1rem;
@@ -99,33 +114,15 @@
             outline: none;
         }
 
+        .form-group input::placeholder {
+            color: #bfaea3;
+        }
+
         .form-group input:focus {
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(184, 134, 139, 0.1);
+            box-shadow: 0 0 0 4px rgba(184, 134, 139, 0.15);
             background-color: #fff;
-        }
-
-        /* File input specific styling to match premium look */
-        .form-group input[type="file"] {
-            padding: 9px 12px;
-            cursor: pointer;
-        }
-
-        .form-group input[type="file"]::file-selector-button {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 4px;
-            margin-right: 10px;
-            font-family: 'Montserrat', sans-serif;
-            font-size: 0.85rem;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        .form-group input[type="file"]::file-selector-button:hover {
-            background-color: var(--primary-hover);
+            transform: translateY(-1px);
         }
 
         .row {
@@ -139,48 +136,60 @@
 
         .btn-primary {
             width: 100%;
-            padding: 14px;
-            background-color: var(--primary);
+            padding: 16px;
+            /* Gradient button for a more premium feel */
+            background: linear-gradient(135deg, var(--primary), #a67378);
             color: #fff;
             border: none;
-            border-radius: 8px;
+            border-radius: 12px;
             font-family: 'Montserrat', sans-serif;
-            font-size: 1rem;
+            font-size: 1.05rem;
             font-weight: 600;
+            letter-spacing: 0.5px;
             cursor: pointer;
-            transition: background-color 0.3s ease, transform 0.1s ease;
+            transition: all 0.3s ease;
             margin-top: 10px;
+            box-shadow: 0 6px 15px rgba(184, 134, 139, 0.25);
         }
 
         .btn-primary:hover:not(:disabled) {
-            background-color: var(--primary-hover);
+            background: linear-gradient(135deg, #a67378, var(--primary-hover));
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(184, 134, 139, 0.35);
         }
 
         .btn-primary:active:not(:disabled) {
-            transform: scale(0.98);
+            transform: translateY(1px);
+            box-shadow: 0 2px 10px rgba(184, 134, 139, 0.2);
         }
 
         .btn-primary:disabled {
-            background-color: #d3b4b7;
+            background: #d3b4b7;
+            box-shadow: none;
             cursor: not-allowed;
-            opacity: 0.8;
+            transform: none;
         }
 
         .error-msg {
             color: #dc3545;
+            background: #fdf0f1;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #f5c2c7;
             font-size: 0.85rem;
             text-align: center;
-            margin-bottom: 15px;
-            font-weight: 600;
+            margin-bottom: 20px;
+            font-weight: 500;
             display: none;
+            animation: fadeIn 0.3s ease;
         }
 
         .result-section {
-            margin-top: 30px;
+            margin-top: 35px;
             padding-top: 25px;
-            border-top: 1px dashed var(--border-color);
+            border-top: 2px dashed var(--primary-light);
             display: none;
-            animation: fadeIn 0.5s ease;
+            animation: fadeInUp 0.5s ease forwards;
         }
 
         .result-section.active {
@@ -191,59 +200,68 @@
             font-size: 0.85rem;
             font-weight: 600;
             color: var(--primary);
-            margin-bottom: 10px;
+            margin-bottom: 12px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            text-align: center;
         }
 
         .url-box {
             display: flex;
             align-items: center;
-            background: var(--input-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 5px;
+            background: #fff;
+            border: 2px solid var(--primary-light);
+            border-radius: 12px;
+            padding: 6px;
             gap: 10px;
+            transition: border-color 0.3s ease;
+        }
+        
+        .url-box:hover {
+            border-color: var(--primary);
         }
 
         .url-box input {
             flex: 1;
             border: none;
             background: transparent;
-            padding: 10px;
+            padding: 10px 10px 10px 15px;
             font-family: monospace;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             color: var(--text-main);
             outline: none;
         }
 
         .btn-copy {
-            background-color: #fff;
-            border: 1px solid var(--border-color);
+            background-color: var(--primary-light);
+            border: none;
             color: var(--text-main);
-            padding: 10px 16px;
-            border-radius: 6px;
+            padding: 12px 20px;
+            border-radius: 8px;
             cursor: pointer;
             font-family: 'Montserrat', sans-serif;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             font-weight: 600;
             transition: all 0.2s ease;
         }
 
         .btn-copy:hover {
-            background-color: var(--input-bg);
-            border-color: var(--primary);
-            color: var(--primary);
+            background-color: var(--primary);
+            color: #fff;
         }
 
         .btn-copy.success {
             background-color: #d4edda;
-            border-color: #c3e6cb;
             color: #155724;
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(15px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
@@ -253,7 +271,8 @@
                 gap: 0;
             }
             .generator-card {
-                padding: 30px 20px;
+                padding: 35px 25px;
+                border-radius: 20px;
             }
         }
     </style>
@@ -278,17 +297,6 @@
                 </div>
             </div>
 
-            <div class="row">
-                <div class="form-group">
-                    <label for="groomPhoto">Groom Photo (Max 5MB)</label>
-                    <input type="file" id="groomPhoto" accept="image/*">
-                </div>
-                <div class="form-group">
-                    <label for="bridePhoto">Bride Photo (Max 5MB)</label>
-                    <input type="file" id="bridePhoto" accept="image/*">
-                </div>
-            </div>
-
             <div class="form-group">
                 <label for="dateInput">Wedding Date & Time</label>
                 <input type="text" id="dateInput" placeholder="e.g. Saturday, 14th February 2027" required>
@@ -297,11 +305,6 @@
             <div class="form-group">
                 <label for="venueInput">Venue Name</label>
                 <input type="text" id="venueInput" placeholder="e.g. The Grand Regal Gardens" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="venuePhotos">Venue Photos (Max 3)</label>
-                <input type="file" id="venuePhotos" accept="image/*" multiple>
             </div>
 
             <div class="form-group">
@@ -315,7 +318,7 @@
         </div>
 
         <div class="result-section" id="resultSection">
-            <div class="result-label">Your Custom Link:</div>
+            <div class="result-label">Your Custom Link Is Ready</div>
             <div class="url-box">
                 <input type="text" id="generatedUrl" readonly>
                 <button class="btn-copy" id="copyBtn">Copy</button>
@@ -331,49 +334,7 @@
             const generatedUrlInput = document.getElementById('generatedUrl');
             const errorMsg = document.getElementById('errorMsg');
 
-            // Image compression helper
-            const compressImage = (file) => {
-                return new Promise((resolve, reject) => {
-                    // Check file size (5MB limit)
-                    if (file.size > 5 * 1024 * 1024) {
-                        reject(new Error(`Image "${file.name}" exceeds the 5MB limit.`));
-                        return;
-                    }
-
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                        const img = new Image();
-                        img.onload = () => {
-                            const canvas = document.createElement('canvas');
-                            let width = img.width;
-                            let height = img.height;
-                            const maxWidth = 1200;
-
-                            // Resize logic
-                            if (width > maxWidth) {
-                                height = Math.round((height * maxWidth) / width);
-                                width = maxWidth;
-                            }
-
-                            canvas.width = width;
-                            canvas.height = height;
-                            
-                            const ctx = canvas.getContext('2d');
-                            ctx.drawImage(img, 0, 0, width, height);
-
-                            // Convert to WebP format with 0.7 quality
-                            const compressedBase64 = canvas.toDataURL("image/webp", 0.7);
-                            resolve(compressedBase64);
-                        };
-                        img.onerror = () => reject(new Error(`Failed to read image "${file.name}".`));
-                        img.src = event.target.result;
-                    };
-                    reader.onerror = () => reject(new Error(`Failed to load file "${file.name}".`));
-                    reader.readAsDataURL(file);
-                });
-            };
-
-            generateBtn.addEventListener('click', async () => {
+            generateBtn.addEventListener('click', () => {
                 // Hide error message initially
                 errorMsg.style.display = 'none';
 
@@ -384,11 +345,6 @@
                 const venue = document.getElementById('venueInput').value.trim();
                 const city = document.getElementById('cityInput').value.trim();
 
-                // Get file inputs
-                const groomPhotoInput = document.getElementById('groomPhoto').files[0];
-                const bridePhotoInput = document.getElementById('bridePhoto').files[0];
-                const venuePhotosInput = document.getElementById('venuePhotos').files;
-
                 // Basic validation
                 if (!groom || !bride || !date || !venue || !city) {
                     errorMsg.textContent = "Please fill in all the text details to generate the link.";
@@ -396,60 +352,40 @@
                     return;
                 }
 
-                // File validation limits
-                if (venuePhotosInput.length > 3) {
-                    errorMsg.textContent = "You can only upload a maximum of 3 venue photos.";
-                    errorMsg.style.display = 'block';
-                    return;
-                }
-
                 try {
-                    // Show loading state
+                    // Show generating state
                     generateBtn.disabled = true;
-                    generateBtn.textContent = "Compressing images... Please wait.";
-                    
-                    let groomPhoto = null;
-                    let bridePhoto = null;
-                    let venuePhotos = [];
-
-                    // Compress images sequentially if they exist
-                    if (groomPhotoInput) groomPhoto = await compressImage(groomPhotoInput);
-                    if (bridePhotoInput) bridePhoto = await compressImage(bridePhotoInput);
-                    
-                    for (let i = 0; i < venuePhotosInput.length; i++) {
-                        const compressed = await compressImage(venuePhotosInput[i]);
-                        venuePhotos.push(compressed);
-                    }
+                    generateBtn.textContent = "Generating...";
 
                     // 1. Create a name slug (groom-bride)
                     const cleanGroom = groom.toLowerCase().replace(/\s+/g, '');
                     const cleanBride = bride.toLowerCase().replace(/\s+/g, '');
                     const slug = `${cleanGroom}-${cleanBride}`;
 
-                    // 2. Create data object
+                    // 2. Generate a short 6-character alphanumeric ID
+                    const shortId = Math.random().toString(36).substring(2, 8);
+
+                    // 3. Create a small data object with ONLY text fields
                     const dataObj = {
                         groom,
                         bride,
                         date,
                         venue,
-                        city,
-                        groomPhoto,
-                        bridePhoto,
-                        venuePhotos
+                        city
                     };
 
-                    // 3. Encode data using base64
-                    // To handle unicode/emojis safely in base64, we optionally use encodeURIComponent
-                    // but falling back to pure JSON.stringify to match exact requirements
-                    const encoded = btoa(JSON.stringify(dataObj));
+                    // 4. Encode data
+                    // Using unescape(encodeURIComponent()) ensures it doesn't break if emojis or Hindi characters are typed
+                    const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(dataObj))));
 
-                    // 4. Generate final absolute URL
+                    // 5. Generate final absolute URL
                     const currentPath = window.location.href.split('?')[0].split('#')[0];
                     let basePath = currentPath.substring(0, currentPath.lastIndexOf('/'));
                     if (basePath === '') basePath = window.location.origin;
                     
                     const inviteFileName = 'Invite.html'; 
-                    const finalUrl = `${basePath}/${inviteFileName}#wi-${slug}-${encoded}`;
+                    // Format: Invite.html#wi-groom-bride-shortId-encodedData
+                    const finalUrl = `${basePath}/${inviteFileName}#wi-${slug}-${shortId}-${encoded}`;
 
                     // Show result
                     generatedUrlInput.value = finalUrl;
@@ -460,14 +396,7 @@
                     copyBtn.classList.remove("success");
 
                 } catch (error) {
-                    // Provide helpful errors if compression fails or data is too large
-                    if (error.name === 'QuotaExceededError' || error.message.includes('quota')) {
-                        errorMsg.textContent = "Data payload exceeded. Try using fewer or smaller images.";
-                    } else if (error.name === 'InvalidCharacterError') {
-                        errorMsg.textContent = "Invalid character in text. Please stick to standard English alphabets.";
-                    } else {
-                        errorMsg.textContent = error.message;
-                    }
+                    errorMsg.textContent = "An error occurred while generating the link. Please check your inputs.";
                     errorMsg.style.display = 'block';
                     resultSection.classList.remove('active');
                 } finally {
@@ -477,7 +406,7 @@
                 }
             });
 
-            // Keep copy button logic perfectly untouched
+            // Copy button logic
             copyBtn.addEventListener('click', () => {
                 generatedUrlInput.select();
                 generatedUrlInput.setSelectionRange(0, 99999);
