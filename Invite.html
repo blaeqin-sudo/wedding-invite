@@ -217,13 +217,13 @@
             transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) 2.2s, opacity 0.4s 2.2s, filter 0.8s ease 0s;
         }
 
-        /* --- THE CARD --- */
+        /* --- THE CARD (Updated to comfortably fit photos & buttons) --- */
         .letter {
             position: absolute; 
             bottom: 10px; 
             left: 20px;   
             width: 300px; 
-            height: 460px; 
+            height: 460px; /* Increased height slightly for new UI */
             background: var(--card-bg);
             border-radius: 8px; z-index: 2;
             transform-origin: bottom center;
@@ -304,7 +304,7 @@
         
         .container.is-open .couple-photos {
             opacity: 1; transform: scale(1) translateY(0);
-            transition-delay: 1.2s; 
+            transition-delay: 1.2s; /* Reveals smoothly after card pulls out */
         }
 
         .couple-photos img {
@@ -314,7 +314,6 @@
             border: 2px solid #E5D0A1;
             box-shadow: 0 4px 15px rgba(179, 135, 40, 0.25);
             background: rgba(255,255,255,0.8);
-            display: none; /* Managed by JS to prevent broken image icons */
         }
 
         /* --- GALLERY BUTTON --- */
@@ -332,7 +331,7 @@
             margin-top: 5px;
             box-shadow: 0 2px 10px rgba(179, 135, 40, 0.1);
             opacity: 0; transform: translateY(10px);
-            transition: all 0.3s ease, opacity 1s ease 1.5s, transform 1s ease 1.5s; 
+            transition: all 0.3s ease, opacity 1s ease 1.5s, transform 1s ease 1.5s; /* Staggered reveal */
         }
         
         .container.is-open .gallery-btn {
@@ -543,7 +542,6 @@
         </div>
     </div>
 
-    <!-- Envelope Animation Script (Kept Intact) -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const container = document.getElementById('cardContainer');
@@ -601,139 +599,108 @@
         });
     </script>
     
-    <!-- Firebase Data Fetch & Cinematic Gallery Script -->
-    <script type="module">
-        // 1. Add Firebase modular SDK via CDN
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    <!-- Dynamic Content Update & Cinematic Gallery Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const hash = window.location.hash;
+            let data = null;
+            let slug = null;
 
-        // 2. Add firebaseConfig provided by user
-        const firebaseConfig = {
-            apiKey: "AIzaSyAYAAzs9_zCgS9dQ3ZS1KvSv0LSgD4H54M",
-            authDomain: "wedding-invite-629e2.firebaseapp.com",
-            projectId: "wedding-invite-629e2",
-            storageBucket: "wedding-invite-629e2.firebasestorage.app",
-            messagingSenderId: "993883990855",
-            appId: "1:993883990855:web:d66af6c28def811d253a62"
-        };
+            // 1. Read hash format: #wi-slug-encodedData
+            if (hash && hash.startsWith('#wi-')) {
+                const hashStr = hash.substring(4); // Remove '#wi-'
+                const lastDashIndex = hashStr.lastIndexOf('-');
+                
+                if (lastDashIndex !== -1) {
+                    slug = hashStr.substring(0, lastDashIndex);
+                    const encodedData = hashStr.substring(lastDashIndex + 1);
+                    
+                    try {
+                        // Decode encodedData
+                        data = JSON.parse(atob(encodedData));
+                        
+                        // Store decoded data temporarily in sessionStorage
+                        sessionStorage.setItem('wi_invite_data', JSON.stringify(data));
+                        
+                        // Clean URL and replace it with just the slug
+                        window.history.replaceState(
+                            {},
+                            document.title,
+                            slug
+                        );
+                    } catch (e) {
+                        console.error("Failed to decode invitation data from URL:", e);
+                    }
+                }
+            } 
+            
+            // 2. If no hash, but sessionStorage has saved data (handles page refresh)
+            if (!data) {
+                const savedData = sessionStorage.getItem('wi_invite_data');
+                if (savedData) {
+                    try {
+                        data = JSON.parse(savedData);
+                    } catch (e) {
+                        console.error("Failed to parse saved invitation data:", e);
+                    }
+                }
+            }
 
-        // 3. Initialize Firebase & Firestore
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
-        // 4. On DOMContentLoaded: Read params & Fetch
-        document.addEventListener('DOMContentLoaded', async () => {
-            // Read URL parameters
-            const params = new URLSearchParams(window.location.search);
-            const id = params.get("id");
-            const slug = params.get("slug");
-
-            if (id) {
+            // 3. Populate all invite details if data exists
+            if (data) {
                 try {
-                    // Fetch document using id
-                    const docSnap = await getDoc(doc(db, "invites", id));
+                    // Populate Text Fields
+                    const fieldsToUpdate = {
+                        'groomName': data.groomName || data.groom,
+                        'brideName': data.brideName || data.bride,
+                        'weddingDate': data.weddingDate || data.date,
+                        'venueName': data.venueName || data.venue,
+                        'venueCity': data.venueCity || data.city
+                    };
 
-                    // If document exists
-                    if (docSnap.exists()) {
-                        const data = docSnap.data();
-
-                        // Populate text fields
-                        const fieldsToUpdate = {
-                            'groomName': data.groomName,
-                            'brideName': data.brideName,
-                            'weddingDate': data.weddingDate,
-                            'venueName': data.venueName,
-                            'venueCity': data.venueCity
-                        };
-
-                        for (const [elementId, value] of Object.entries(fieldsToUpdate)) {
-                            if (value) {
-                                const el = document.getElementById(elementId);
-                                if (el) el.textContent = value;
-                            }
+                    for (const [elementId, value] of Object.entries(fieldsToUpdate)) {
+                        if (value) {
+                            const el = document.getElementById(elementId);
+                            if (el) el.textContent = value;
                         }
+                    }
 
-                        // Set Couple Photos
-                        const couplePhotosContainer = document.getElementById('couplePhotos');
-                        couplePhotosContainer.innerHTML = ''; // Clear container
-
-                        if (data.groomPhotoURL) {
+                    // --- Inject Couple Photos ---
+                    const groomImgSrc = data.groomPhoto || data.groomImage;
+                    const brideImgSrc = data.bridePhoto || data.brideImage;
+                    const couplePhotosContainer = document.getElementById('couplePhotos');
+                    
+                    if (groomImgSrc || brideImgSrc) {
+                        couplePhotosContainer.style.display = 'flex';
+                        if (groomImgSrc) {
                             const gImg = document.createElement('img');
+                            gImg.src = groomImgSrc;
                             gImg.alt = "Groom";
-                            gImg.onload = () => { 
-                                gImg.style.display = 'block'; 
-                                couplePhotosContainer.style.display = 'flex'; 
-                            };
-                            gImg.src = data.groomPhotoURL;
                             couplePhotosContainer.appendChild(gImg);
                         }
-                        
-                        if (data.bridePhotoURL) {
+                        if (brideImgSrc) {
                             const bImg = document.createElement('img');
+                            bImg.src = brideImgSrc;
                             bImg.alt = "Bride";
-                            bImg.onload = () => { 
-                                bImg.style.display = 'block'; 
-                                couplePhotosContainer.style.display = 'flex'; 
-                            };
-                            bImg.src = data.bridePhotoURL;
                             couplePhotosContainer.appendChild(bImg);
                         }
-
-                        // Set Venue Gallery Images
-                        if (data.venuePhotoURLs && Array.isArray(data.venuePhotoURLs) && data.venuePhotoURLs.length > 0) {
-                            const openGalleryBtn = document.getElementById('openGalleryBtn');
-                            openGalleryBtn.style.display = 'inline-block';
-                            initGallerySystem(data.venuePhotoURLs);
-                        }
-
-                        // 5. After successful load: Clean URL
-                        if (slug) {
-                            window.history.replaceState({}, document.title, slug);
-                        }
-
-                    } else {
-                        // 7. If document not found: Show a clean error inside the card
-                        showError("Invitation<br>Not Found", "Please double-check your link and try again.");
                     }
-                } catch (error) {
-                    console.error("Error fetching invitation data from Firestore:", error);
-                    showError("Loading Error", "Could not load the invitation. Please try again later.");
+
+                    // --- Inject Venue Gallery ---
+                    const galleryArray = data.gallery || data.venueImages || data.images;
+                    if (galleryArray && Array.isArray(galleryArray) && galleryArray.length > 0) {
+                        const openGalleryBtn = document.getElementById('openGalleryBtn');
+                        openGalleryBtn.style.display = 'inline-block';
+                        initGallerySystem(galleryArray);
+                    }
+                } catch (e) {
+                    console.warn("Could not render invitation data:", e);
                 }
-            } else {
-                // If no ID is passed in the URL at all
-                showError("No Invitation ID", "No invitation ID was found in the link.");
             }
+            // 4. If no data at all, it simply stops here and the default card shows.
         });
 
-        // Function to cleanly inject error messages into the card design
-        function showError(titleHtml, messageHtml) {
-            const namesContainer = document.querySelector('.names');
-            if (namesContainer) {
-                namesContainer.innerHTML = `<span style="font-size: 1.6rem; line-height: 1.4;">${titleHtml}</span>`;
-            }
-            
-            const detailsContainers = document.querySelectorAll('.details');
-            if (detailsContainers[0]) {
-                detailsContainers[0].innerHTML = messageHtml;
-            }
-            if (detailsContainers[1]) {
-                detailsContainers[1].style.display = 'none';
-            }
-            
-            const venueContainer = document.querySelector('.venue');
-            if (venueContainer) venueContainer.style.display = 'none';
-            
-            const divider = document.querySelector('.divider');
-            if (divider) divider.style.display = 'none';
-            
-            const couplePhotos = document.getElementById('couplePhotos');
-            if (couplePhotos) couplePhotos.style.display = 'none';
-            
-            const galleryBtn = document.getElementById('openGalleryBtn');
-            if (galleryBtn) galleryBtn.style.display = 'none';
-        }
-
-        // --- CINEMATIC GALLERY LOGIC (Untouched, merged into module scope) ---
+        // --- CINEMATIC GALLERY LOGIC ---
         function initGallerySystem(imagesArray) {
             const track = document.getElementById('sliderTrack');
             const dotsContainer = document.getElementById('sliderDots');
