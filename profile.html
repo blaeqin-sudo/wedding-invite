@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creator Profile</title>
+    <style>
+        :root {
+            --bg-color: #050505;
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-hover: rgba(255, 255, 255, 0.08);
+            --text-primary: #ffffff;
+            --text-secondary: #a1a1aa;
+            --accent-gradient: linear-gradient(135deg, #6366f1, #a855f7, #ec4899);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.15), transparent 50%),
+                radial-gradient(circle at 85% 30%, rgba(236, 72, 153, 0.15), transparent 50%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            overflow-x: hidden;
+        }
+
+        #app {
+            width: 100%;
+            max-width: 420px;
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 28px;
+            padding: 40px 30px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 
+                0 20px 40px rgba(0, 0, 0, 0.4),
+                inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+            text-align: center;
+        }
+
+        .fade-in {
+            animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .avatar {
+            width: 104px;
+            height: 104px;
+            border-radius: 50%;
+            background: var(--accent-gradient);
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 42px;
+            font-weight: 700;
+            color: #fff;
+            box-shadow: 0 10px 30px rgba(168, 85, 247, 0.4);
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+        }
+
+        .avatar::after {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            border-radius: 50%;
+            background: var(--accent-gradient);
+            z-index: -1;
+            filter: blur(15px);
+            opacity: 0.7;
+        }
+
+        .username {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 32px;
+            letter-spacing: -0.5px;
+            background: linear-gradient(to right, #fff, #a1a1aa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .links-container {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .link-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            width: 100%;
+            padding: 18px;
+            border-radius: 18px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+            letter-spacing: 0.3px;
+        }
+
+        .link-btn::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .link-btn:hover {
+            transform: translateY(-4px);
+            background: var(--glass-hover);
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3), 0 0 20px rgba(255, 255, 255, 0.05);
+        }
+
+        .link-btn:hover::before {
+            opacity: 1;
+        }
+
+        .btn-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-icon svg {
+            width: 22px;
+            height: 22px;
+        }
+
+        .error-card {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 200px;
+        }
+
+        .error-text {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #ef4444;
+            letter-spacing: -0.5px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="app">
+        <!-- Content gets injected dynamically here -->
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const app = document.getElementById("app");
+            const hash = window.location.hash;
+
+            const showError = () => {
+                app.innerHTML = `
+                    <div class="glass-card error-card fade-in">
+                        <h2 class="error-text">Invalid Bio Link</h2>
+                    </div>
+                `;
+            };
+
+            // 1. Initial Validation
+            if (!hash || !hash.startsWith("#bio-")) {
+                showError();
+                return;
+            }
+
+            try {
+                // 2. Remove "#bio-"
+                const hashData = hash.substring(5); 
+                
+                // 3. Split by "-"
+                const parts = hashData.split('-');
+
+                if (parts.length < 3) {
+                    showError();
+                    return;
+                }
+
+                // Extract segments (Username might have hyphens, so we pop the known trailing parts)
+                const encodedData = parts.pop();
+                const shortId = parts.pop();
+                const username = parts.join('-'); 
+
+                // 4. Decode using JSON.parse(atob(encodedData))
+                const decodedString = atob(encodedData);
+                const data = JSON.parse(decodedString);
+
+                // Render the UI
+                renderProfile(username, data);
+
+                // Clean the URL purely to /username
+                if (window.history && window.history.replaceState) {
+                    window.history.replaceState(null, '', '/' + username);
+                }
+
+            } catch (error) {
+                console.error("Failed to parse bio link data:", error);
+                showError();
+            }
+
+            function renderProfile(username, data) {
+                // Extract initial for placeholder
+                const initial = username.charAt(0).toUpperCase();
+
+                let linksHtml = '';
+
+                // Instagram - Auto generated as required
+                linksHtml += createButton('Instagram', `https://instagram.com/${username}`, getIcon('instagram'));
+
+                // YouTube
+                if (data.youtube && data.youtube.trim() !== "") {
+                    linksHtml += createButton('YouTube', data.youtube, getIcon('youtube'));
+                }
+
+                // Snapchat
+                if (data.snapchat && data.snapchat.trim() !== "") {
+                    linksHtml += createButton('Snapchat', data.snapchat, getIcon('snapchat'));
+                }
+
+                // WhatsApp
+                if (data.whatsapp && data.whatsapp.trim() !== "") {
+                    linksHtml += createButton('WhatsApp', data.whatsapp, getIcon('whatsapp'));
+                }
+
+                // Website
+                if (data.website && data.website.trim() !== "") {
+                    linksHtml += createButton('Website', data.website, getIcon('website'));
+                }
+
+                app.innerHTML = `
+                    <div class="glass-card fade-in">
+                        <div class="avatar">${initial}</div>
+                        <h1 class="username">@${username}</h1>
+                        <div class="links-container">
+                            ${linksHtml}
+                        </div>
+                    </div>
+                `;
+            }
+
+            function createButton(title, url, iconSvg) {
+                // Ensure URL protocol exists
+                const secureUrl = url.startsWith('http') ? url : `https://${url}`;
+                return `
+                    <a href="${secureUrl}" target="_blank" rel="noopener noreferrer" class="link-btn">
+                        <span class="btn-icon">${iconSvg}</span>
+                        <span class="btn-text">${title}</span>
+                    </a>
+                `;
+            }
+
+            function getIcon(platform) {
+                const icons = {
+                    instagram: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>`,
+                    youtube: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33 2.78 2.78 0 0 0 1.94 2c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.33 29 29 0 0 0-.46-5.33z"></path><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"></polygon></svg>`,
+                    snapchat: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.5c-4 0-7.5-2.5-7.5-6.5 0-1.5.5-3 1.5-4.5 0-2 1.5-4 4-5 .5-2.5 4-2.5 4.5 0 2.5 1 4 3 4 5 1 1.5 1.5 3 1.5 4.5 0 4-3.5 6.5-7.5 6.5z"></path></svg>`,
+                    whatsapp: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>`,
+                    website: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>`
+                };
+                return icons[platform] || '';
+            }
+        });
+    </script>
+</body>
+</html>
