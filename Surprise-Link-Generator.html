@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Surprise Link Generator ✨</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Phosphor Icons for cute UI symbols -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        fredoka: ['Fredoka', 'sans-serif'],
+                        nunito: ['Nunito', 'sans-serif'],
+                    },
+                    colors: {
+                        pastel: {
+                            pink: '#FFD1DC',
+                            purple: '#E2D1F9',
+                            blue: '#D4F0F0',
+                            yellow: '#FFFFD1',
+                            green: '#D1FFD7'
+                        }
+                    },
+                    boxShadow: {
+                        'soft': '0 20px 40px -15px rgba(0,0,0,0.05)',
+                        'glow': '0 0 20px rgba(236, 72, 153, 0.3)'
+                    },
+                    animation: {
+                        'fade-in-up': 'fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                        'pop-in': 'popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
+                        'float': 'float 6s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        fadeInUp: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        popIn: {
+                            '0%': { opacity: '0', transform: 'scale(0.9)' },
+                            '100%': { opacity: '1', transform: 'scale(1)' },
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            /* Light pastel gradient background */
+            background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+            background-image: radial-gradient(at 0% 0%, hsla(333,100%,94%,1) 0, transparent 50%),
+                              radial-gradient(at 50% 0%, hsla(271,100%,94%,1) 0, transparent 50%),
+                              radial-gradient(at 100% 0%, hsla(199,100%,94%,1) 0, transparent 50%);
+            background-attachment: fixed;
+            min-height: 100vh;
+        }
+        
+        /* Glassmorphism card */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 2px solid rgba(255, 255, 255, 0.8);
+        }
+
+        /* Form Inputs */
+        .input-field {
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid #f3e8ff;
+            transition: all 0.3s ease;
+        }
+
+        .input-field:focus {
+            border-color: #d8b4fe;
+            box-shadow: 0 0 0 4px rgba(216, 180, 254, 0.2);
+            transform: translateY(-2px);
+            outline: none;
+        }
+
+        .input-field::placeholder {
+            color: #a1a1aa;
+            font-weight: 400;
+        }
+
+        /* Gradient Button */
+        .btn-gradient {
+            background: linear-gradient(135deg, #f472b6 0%, #c084fc 100%);
+            background-size: 200% auto;
+            transition: 0.4s ease;
+        }
+
+        .btn-gradient:hover {
+            background-position: right center;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px -5px rgba(244, 114, 182, 0.5);
+        }
+        
+        .btn-gradient:active {
+            transform: translateY(0);
+        }
+
+        /* Hide number input spinners */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+    </style>
+</head>
+<body class="font-nunito text-gray-700 antialiased flex flex-col items-center justify-center p-4 sm:p-8 relative overflow-x-hidden">
+
+    <!-- Decorative floating emojis (background) -->
+    <div class="fixed top-10 left-10 text-4xl animate-float opacity-50 pointer-events-none">🎈</div>
+    <div class="fixed bottom-20 left-20 text-5xl animate-float opacity-50 pointer-events-none" style="animation-delay: 1s;">🎂</div>
+    <div class="fixed top-20 right-16 text-4xl animate-float opacity-50 pointer-events-none" style="animation-delay: 2s;">✨</div>
+    <div class="fixed bottom-32 right-12 text-5xl animate-float opacity-50 pointer-events-none" style="animation-delay: 1.5s;">🎁</div>
+
+    <!-- Main Container -->
+    <main class="w-full max-w-lg glass-card rounded-3xl shadow-soft p-6 sm:p-10 relative z-10 animate-fade-in-up">
+        
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-tr from-pink-200 to-purple-200 mb-4 shadow-sm">
+                <i class="ph-fill ph-gift text-3xl text-pink-500"></i>
+            </div>
+            <h1 class="font-fredoka text-3xl sm:text-4xl font-bold text-gray-800 tracking-tight mb-2">
+                Surprise Link!
+            </h1>
+            <p class="text-gray-500 font-medium text-sm sm:text-base">
+                Create a magical birthday reveal link ✨
+            </p>
+        </div>
+
+        <!-- Form -->
+        <form id="generator-form" class="space-y-5">
+            
+            <!-- Grid for Name & DOB -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div class="space-y-1.5">
+                    <label class="block text-sm font-bold text-gray-600 ml-1" for="name">
+                        Birthday Person <span class="text-pink-400">*</span>
+                    </label>
+                    <div class="relative">
+                        <i class="ph ph-user absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg"></i>
+                        <input type="text" id="name" required placeholder="e.g. Riya" class="input-field w-full rounded-2xl py-3 pl-11 pr-4 font-semibold text-gray-700">
+                    </div>
+                </div>
+
+                <div class="space-y-1.5">
+                    <label class="block text-sm font-bold text-gray-600 ml-1" for="dob">
+                        Date of Birth <span class="text-pink-400">*</span>
+                    </label>
+                    <div class="relative">
+                        <i class="ph ph-calendar-blank absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg"></i>
+                        <input type="date" id="dob" required class="input-field w-full rounded-2xl py-3 pl-11 pr-4 font-semibold text-gray-700 cursor-pointer">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grid for Age & Sender -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div class="space-y-1.5">
+                    <label class="block text-sm font-bold text-gray-600 ml-1" for="age">
+                        Turning Age <span class="text-pink-400">*</span>
+                    </label>
+                    <div class="relative">
+                        <i class="ph ph-number-circle-eight absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg"></i>
+                        <input type="number" id="age" required min="1" max="150" placeholder="e.g. 21" class="input-field w-full rounded-2xl py-3 pl-11 pr-4 font-semibold text-gray-700">
+                    </div>
+                </div>
+
+                <div class="space-y-1.5">
+                    <label class="block text-sm font-bold text-gray-600 ml-1" for="sender">
+                        Your Name <span class="text-pink-400">*</span>
+                    </label>
+                    <div class="relative">
+                        <i class="ph ph-smiley-wink absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg"></i>
+                        <input type="text" id="sender" required placeholder="e.g. Alex" class="input-field w-full rounded-2xl py-3 pl-11 pr-4 font-semibold text-gray-700">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Message Area -->
+            <div class="space-y-1.5">
+                <label class="block text-sm font-bold text-gray-600 ml-1" for="message">
+                    Wish Message <span class="text-pink-400">*</span>
+                </label>
+                <div class="relative">
+                    <i class="ph ph-envelope-simple absolute left-4 top-4 text-gray-400 text-lg"></i>
+                    <textarea id="message" required rows="3" placeholder="Write a cute message..." class="input-field w-full rounded-2xl py-3 pl-11 pr-4 font-medium text-gray-700 resize-none"></textarea>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="w-full btn-gradient text-white font-fredoka font-semibold text-lg py-4 rounded-2xl shadow-glow flex items-center justify-center gap-2 mt-4">
+                <span>Generate Surprise Link</span>
+                <i class="ph-bold ph-magic-wand"></i>
+            </button>
+        </form>
+
+        <!-- Result Section (Hidden initially) -->
+        <div id="result-section" class="hidden mt-8 pt-6 border-t border-purple-100">
+            <div class="bg-gradient-to-r from-pink-50 to-purple-50 rounded-2xl p-4 border border-pink-100 relative">
+                <label class="block text-xs font-bold text-pink-500 uppercase tracking-wider mb-2 flex justify-between items-center">
+                    Your Magic Link is Ready!
+                    <span id="success-msg" class="text-green-500 hidden items-center gap-1 font-semibold normal-case tracking-normal">
+                        <i class="ph-fill ph-check-circle"></i> Copied!
+                    </span>
+                </label>
+                
+                <div class="flex items-center gap-2">
+                    <input type="text" id="generated-url" readonly class="w-full bg-white border border-purple-200 text-gray-600 text-sm font-medium rounded-xl py-3 px-4 outline-none selection:bg-pink-200">
+                    
+                    <button id="copy-btn" type="button" class="shrink-0 bg-white border border-purple-200 hover:border-pink-300 hover:bg-pink-50 text-pink-500 rounded-xl p-3 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-pink-300 active:scale-95" title="Copy to clipboard">
+                        <i id="copy-icon" class="ph-bold ph-copy text-xl transition-transform"></i>
+                    </button>
+                </div>
+                <p class="text-xs text-gray-400 mt-3 text-center font-medium">
+                    Send this link to them and watch them smile! 🎈
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Application Logic -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('generator-form');
+            const resultSection = document.getElementById('result-section');
+            const urlInput = document.getElementById('generated-url');
+            const copyBtn = document.getElementById('copy-btn');
+            const copyIcon = document.getElementById('copy-icon');
+            const successMsg = document.getElementById('success-msg');
+
+            // Form Submit Logic
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+
+                // Get Values
+                const name = document.getElementById('name').value.trim();
+                const dob = document.getElementById('dob').value;
+                const age = document.getElementById('age').value;
+                const message = document.getElementById('message').value.trim();
+                const sender = document.getElementById('sender').value.trim();
+
+                // Step 1: Create slug (lowercase, remove spaces)
+                const slug = name.toLowerCase().replace(/\s+/g, '');
+
+                // Step 2: Generate short random ID (5 characters)
+                const shortId = Math.random().toString(36).substring(2, 7);
+
+                // Step 3: Create data object
+                const dataObj = {
+                    name,
+                    dob,
+                    age,
+                    message,
+                    sender
+                };
+
+                // Step 4: Encode data to Base64
+                // Using unescape & encodeURIComponent safely handles Emojis and special characters in base64 encoding
+                const encodedData = btoa(unescape(encodeURIComponent(JSON.stringify(dataObj))));
+
+                // Step 5: Construct Final Full URL
+                const finalUrl = `https://blaeqin-sudo.github.io/birthday.html#bday-${slug}-${shortId}-${encodedData}`;
+
+                // Display Result UI
+                urlInput.value = finalUrl;
+                
+                // Animate showing the result
+                resultSection.classList.remove('hidden');
+                
+                // Trigger browser reflow to restart animation correctly
+                void resultSection.offsetWidth; 
+                resultSection.classList.add('animate-pop-in');
+                
+                // Automatically scroll down a bit on mobile to show the result
+                setTimeout(() => {
+                    resultSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }, 100);
+            });
+
+            // Copy Button Logic
+            copyBtn.addEventListener('click', () => {
+                const url = urlInput.value;
+                
+                if (!url) return;
+
+                // Select text for user feedback
+                urlInput.select();
+                urlInput.setSelectionRange(0, 99999); // For mobile devices
+
+                // Execute copy
+                try {
+                    document.execCommand('copy');
+                    
+                    // Show success animation
+                    copyIcon.classList.remove('ph-copy');
+                    copyIcon.classList.add('ph-check', 'text-green-500');
+                    copyBtn.classList.add('border-green-300', 'bg-green-50');
+                    
+                    successMsg.classList.remove('hidden');
+                    successMsg.classList.add('flex', 'animate-pop-in');
+
+                    // Reset button after 2.5 seconds
+                    setTimeout(() => {
+                        copyIcon.classList.remove('ph-check', 'text-green-500');
+                        copyIcon.classList.add('ph-copy');
+                        copyBtn.classList.remove('border-green-300', 'bg-green-50');
+                        
+                        successMsg.classList.add('hidden');
+                        successMsg.classList.remove('flex', 'animate-pop-in');
+                        
+                        // Deselect input
+                        window.getSelection().removeAllRanges();
+                    }, 2500);
+                } catch (err) {
+                    console.error('Failed to copy text', err);
+                    alert('Failed to copy. Please select the text and copy manually.');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
