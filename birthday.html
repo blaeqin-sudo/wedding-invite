@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Birthday!</title>
+    <!-- Importing cute rounded fonts for the aesthetic -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color-1: #ffdde1;
+            --bg-color-2: #ee9ca7;
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --text-main: #ff4757;
+            --text-dark: #2f3542;
+            --text-light: #747d8c;
+            --box-bg: #fff0f5;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(135deg, var(--bg-color-1) 0%, var(--bg-color-2) 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            color: var(--text-dark);
+        }
+
+        /* --- UI Containers --- */
+        #error-container {
+            background: white;
+            padding: 30px 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+            color: var(--text-main);
+            font-weight: bold;
+            font-size: 1.2rem;
+            display: none;
+            z-index: 100;
+        }
+
+        #celebration-container {
+            display: none;
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            height: 100vh;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        /* --- Card Styling --- */
+        .card {
+            background: var(--card-bg);
+            border-radius: 32px;
+            padding: 40px 30px;
+            box-shadow: 0 20px 50px rgba(238, 156, 167, 0.4);
+            text-align: center;
+            max-width: 450px;
+            width: 100%;
+            transform: scale(0.8);
+            opacity: 0;
+            position: relative;
+            z-index: 10;
+            backdrop-filter: blur(10px);
+        }
+
+        .card.animate-in {
+            animation: popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.8) translateY(20px); opacity: 0; }
+            100% { transform: scale(1) translateY(0); opacity: 1; }
+        }
+
+        /* --- Typography --- */
+        h1 {
+            font-family: 'Fredoka One', cursive;
+            color: var(--text-main);
+            font-size: 2.2rem;
+            margin: 15px 0 5px;
+            line-height: 1.2;
+        }
+
+        h2 {
+            font-size: 1.2rem;
+            color: var(--text-dark);
+            font-weight: 800;
+            margin-bottom: 5px;
+        }
+
+        .dob {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            font-weight: 700;
+            margin-bottom: 25px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .message-box {
+            background: var(--box-bg);
+            padding: 25px 20px;
+            border-radius: 20px;
+            margin: 20px 0;
+            border: 2px dashed #ffb6c1;
+            font-size: 1.05rem;
+            line-height: 1.5;
+            color: var(--text-dark);
+            position: relative;
+        }
+
+        .sender {
+            font-weight: 800;
+            color: var(--text-main);
+            font-size: 1.1rem;
+            margin-top: 15px;
+        }
+
+        /* --- CSS Art: Cupcake --- */
+        .cupcake-wrapper {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+
+        .cupcake {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            animation: floatCupcake 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes floatCupcake {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-8px); }
+        }
+
+        .cherry {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: #ff4757;
+            border-radius: 50%;
+            top: -5px;
+            left: 30px;
+            z-index: 3;
+            box-shadow: inset -3px -3px 0 rgba(0,0,0,0.2);
+        }
+
+        .cherry::before {
+            content: '';
+            position: absolute;
+            width: 2px;
+            height: 15px;
+            background: #2f3542;
+            top: -12px;
+            left: 10px;
+            transform: rotate(15deg);
+        }
+
+        .icing {
+            position: absolute;
+            width: 80px;
+            height: 45px;
+            background: #ffb8b8;
+            border-radius: 40px 40px 10px 10px;
+            top: 10px;
+            z-index: 2;
+            box-shadow: inset -5px -5px 0 rgba(0,0,0,0.1);
+        }
+
+        .base {
+            position: absolute;
+            width: 56px;
+            height: 35px;
+            background: #eccc68;
+            top: 50px;
+            left: 12px;
+            border-radius: 5px 5px 15px 15px;
+            z-index: 1;
+            background-image: repeating-linear-gradient(90deg, transparent, transparent 6px, rgba(0,0,0,0.1) 6px, rgba(0,0,0,0.1) 12px);
+        }
+
+        /* --- CSS Art: Background Balloons --- */
+        .balloon {
+            position: absolute;
+            width: 80px;
+            height: 100px;
+            border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
+            z-index: 1;
+            opacity: 0.8;
+            animation: floatBalloon 6s ease-in-out infinite alternate;
+        }
+
+        .balloon::after {
+            content: '';
+            position: absolute;
+            bottom: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        .b-left {
+            left: 5%;
+            top: 15%;
+            background: #a18cd1;
+            animation-delay: 0.5s;
+        }
+
+        .b-right {
+            right: 5%;
+            top: 25%;
+            background: #fbc2eb;
+            animation-duration: 7s;
+        }
+
+        @keyframes floatBalloon {
+            0% { transform: translateY(0) rotate(-5deg); }
+            100% { transform: translateY(-40px) rotate(5deg); }
+        }
+
+        /* --- Confetti System --- */
+        #confetti-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        .confetti-piece {
+            position: absolute;
+            width: 10px;
+            height: 20px;
+            top: -20px;
+            opacity: 0;
+        }
+
+        @keyframes fall {
+            0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+            80% { opacity: 1; }
+            100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+        }
+
+        /* Mobile Adjustments */
+        @media (max-width: 480px) {
+            h1 { font-size: 1.8rem; }
+            .card { padding: 30px 20px; }
+            .balloon { width: 60px; height: 75px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Error State -->
+    <div id="error-container">
+        💔 Invalid Birthday Link
+    </div>
+
+    <!-- Celebration State -->
+    <div id="celebration-container">
+        <!-- Floating CSS Balloons -->
+        <div class="balloon b-left"></div>
+        <div class="balloon b-right"></div>
+        
+        <!-- Main Card -->
+        <div class="card" id="bday-card">
+            <!-- CSS Cupcake -->
+            <div class="cupcake-wrapper">
+                <div class="cupcake">
+                    <div class="cherry"></div>
+                    <div class="icing"></div>
+                    <div class="base"></div>
+                </div>
+            </div>
+
+            <!-- Dynamic Content -->
+            <h1>HAPPY BIRTHDAY <br><span id="ui-name"></span> 🎉</h1>
+            <h2>You are now <span id="ui-age"></span> years old!</h2>
+            <div class="dob" id="ui-dob"></div>
+            
+            <div class="message-box">
+                <p id="ui-message"></p>
+            </div>
+            
+            <div class="sender">With love, <span id="ui-sender"></span></div>
+        </div>
+    </div>
+
+    <!-- Container for generated confetti -->
+    <div id="confetti-container"></div>
+
+    <script>
+        // Synthesize a soft 'pop' sound using Web Audio API (No external files needed)
+        function playPopSound() {
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContext) return;
+                
+                const ctx = new AudioContext();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                
+                // Soft pop sound parameters
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.1);
+                
+                gain.gain.setValueAtTime(0.5, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+                
+                osc.start(ctx.currentTime);
+                osc.stop(ctx.currentTime + 0.1);
+            } catch(e) {
+                // Ignore audio errors (browser auto-play policies etc)
+                console.log("Audio skipped due to browser policy");
+            }
+        }
+
+        // Generates and animates falling confetti
+        function triggerConfetti() {
+            const container = document.getElementById('confetti-container');
+            const colors = ['#ff4757', '#2ed573', '#1e90ff', '#ffa502', '#ff69b4', '#a18cd1'];
+            
+            // Generate 100 confetti pieces
+            for(let i = 0; i < 100; i++) {
+                const confetti = document.createElement('div');
+                confetti.classList.add('confetti-piece');
+                
+                // Randomize properties
+                const bgColor = colors[Math.floor(Math.random() * colors.length)];
+                const leftPos = Math.random() * 100;
+                const animDuration = Math.random() * 3 + 2; // 2s to 5s
+                const animDelay = Math.random() * 2; // 0s to 2s
+                
+                confetti.style.backgroundColor = bgColor;
+                confetti.style.left = leftPos + 'vw';
+                confetti.style.animation = `fall ${animDuration}s linear ${animDelay}s forwards`;
+                
+                container.appendChild(confetti);
+            }
+
+            // Remove confetti container after 5 seconds to clean up DOM
+            setTimeout(() => {
+                container.innerHTML = '';
+            }, 6000); 
+        }
+
+        // Main logic to parse URL hash and trigger UI
+        function initBirthdayReveal() {
+            try {
+                const hash = window.location.hash;
+                
+                // 1. Validate format
+                if (!hash || !hash.startsWith('#bday-')) {
+                    throw new Error("Invalid Format");
+                }
+
+                // 2. Remove '#bday-' and split
+                const dataString = hash.replace('#bday-', '');
+                const parts = dataString.split('-');
+                
+                if (parts.length < 2) {
+                    throw new Error("Incomplete Data");
+                }
+
+                // 3. Extract last part as encoded data
+                const encodedData = parts.pop();
+                
+                // Extract shortId (second to last)
+                const shortId = parts.pop();
+                
+                // The remaining parts reconstruct the name slug (useful for URL)
+                const nameSlug = parts.join('-');
+
+                // 4. Decode JSON
+                const jsonStr = atob(encodedData);
+                const bdayData = JSON.parse(jsonStr);
+
+                // 5. Populate UI elements
+                document.getElementById('ui-name').textContent = bdayData.name || nameSlug;
+                document.getElementById('ui-age').textContent = bdayData.age;
+                document.getElementById('ui-dob').textContent = bdayData.dob;
+                document.getElementById('ui-message').textContent = bdayData.message;
+                document.getElementById('ui-sender').textContent = bdayData.sender;
+
+                // 6. Trigger Celebration & Animations
+                document.getElementById('celebration-container').style.display = 'flex';
+                
+                // Trigger pop sound and card animation
+                playPopSound();
+                document.getElementById('bday-card').classList.add('animate-in');
+                
+                // Trigger confetti burst
+                triggerConfetti();
+
+                // 7. Clean professional URL (/name)
+                // Use the name from JSON for the cleaner URL, lowercase it
+                const cleanPath = '/' + encodeURIComponent((bdayData.name || nameSlug).toLowerCase());
+                history.replaceState(null, '', cleanPath);
+
+            } catch (error) {
+                console.error("Birthday link error:", error);
+                document.getElementById('error-container').style.display = 'block';
+            }
+        }
+
+        // Run when page loads
+        window.addEventListener('DOMContentLoaded', initBirthdayReveal);
+
+        /* * FOR TESTING:
+         * To preview this working, add this to your URL and press enter:
+         * #bday-riya-xyz123-eyJuYW1lIjoiUml5YSIsICJhZ2UiOjI1LCAiZG9iIjoiT2N0b2JlciAxNSwgMTk5OCIsICJtZXNzYWdlIjoiV2lzaGluZyB5b3UgdGhlIGJlc3QgZGF5IGV2ZXIgZmlsbGVkIHdpdGggbG92ZSBhbmQgam95ISIsICJzZW5kZXIiOiJBbGV4In0=
+         */
+    </script>
+</body>
+</html>
